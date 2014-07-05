@@ -7,12 +7,14 @@
               [cljs-http.client :as http]
               [ringi.utils :refer [guid]]))
 
-;; Lets you do (prn "stuff") to the console
 (enable-console-print!)
 
-(def app-state
-  (atom {:vote
-         {:id (guid)
+(def ESCAPE_KEY 27)
+(def ENTER_KEY 13)
+
+(def app-data
+  (atom {
+         :vote {:id (guid)
           :title "are you worried heroku outages will take VoteIt down?"
           :created "tbd"
           :user "alexhemard"
@@ -43,9 +45,8 @@
                       :user "jwheeler"
                       :text "thanks obama"}]}}))
 
-(defn shared-state []
-  {:current-user {:id 99999
-                   :user "alexhemard"}})
+(def shared-data
+  {:modal-chan (chan)})
 
 (defn- with-id
   [m]
@@ -62,6 +63,12 @@
   [& nodes]
   (doall (map #(set! (.-value %) "") nodes)))
 
+(defn require-login! [owner opts]
+  (let [current-user (:current-user (om/get-state owner))
+        modal (:modal-chan (om/get-shared owner))]
+    (when (not current-user)
+      (put! modal [:login opts]))))
+
 (defn comment-form [app owner opts]
   (om/component
    (dom/form
@@ -76,9 +83,10 @@
    :text value})
 
 (defn add-comment [app owner]
+  (require-login! owner)
   (let [new-comment (-> (om/get-node owner "new-comment")
                         .-value
-                        (parse-comment (-> (om/get-shared owner) :current-user :user) ))]
+                        (parse-comment (-> (om/get-state owner) :current-user :name)))]
     (clear-nodes! (om/get-node owner "new-comment"))
     (when new-comment
       (om/transact! app :comments conj new-comment))))
@@ -97,8 +105,7 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:delete (chan)
-       :create (chan)})
+      {:delete (chan)})
     om/IWillMount
     (will-mount [_]
       (let [delete (om/get-state owner :delete)]
@@ -108,15 +115,14 @@
               (fn [xs] (into [] (remove #(= comment %) xs))))
             (recur))))))
     om/IRenderState
-    (render-state [this {:keys [delete]}]
+    (render-state [_ {:keys [delete current-user] }]
       (dom/div
        #js {:className "comments"}
        (dom/h4 nil "comments")
        (apply dom/ul nil
-              (om/build-all comment-view
-                            (:comments app)
-                            {:init-state {:delete delete}
-                             :key        :id}))
+              (om/build-all comment-view (:comments app) {:init-state {:delete delete}
+                                                          :state      {:current-user current-user}
+                                                          :key        :id}))
        (dom/div
         nil
         (dom/input #js {:type "text" :ref "new-comment"})
@@ -125,7 +131,7 @@
 (defn radio-with-label [vote owner {:keys [value text] :as opts}]
   (reify
     om/IRenderState
-    (render-state [this {:keys [change]}]
+    (render-state [_ {:keys [change]}]
       (let [name (str "choice-" (:id vote))
             html-id (str name "-" value)]
         (dom/div
@@ -134,21 +140,20 @@
                          :name name
                          :value value
                          :type "radio"
-                         :checked (= value (:value vote))
-                         :onChange (fn [e] (om/update! vote assoc-in [:value] value))} )
+                         :checked (= value (:value vote))} )
          (dom/label #js {:htmlFor html-id} text))))))
 
-(defn choice-form [choice owner opts]
+(defn choice-form [app owner opts]
   (reify
     om/IRenderState
-    (render-state [this {:keys [change]}]
-      (let [user-id (-> (om/get-shared owner) :current-user :id)
-            my-vote (first (filter #(= (-> % :user-id) user-id) (:votes choice)))]
+    (render-state [_ {:keys [change]}]
+      (let [user-id (-> (om/get-shared owner) :user :id)
+            my-vote (first (filter #(= (-> % :user-id) user-id) (:votes app)))]
         (dom/form
          #js {:className "choice-form"}
-         (om/build radio-with-label my-vote {:opts {:value 0 :text "Yes"}})
-         (om/build radio-with-label my-vote {:opts {:value 1 :text "Ok"}})
-         (om/build radio-with-label my-vote {:opts {:value 2 :text "No"}}))))))
+         (om/build radio-with-label app {:opts {:value 0 :text "Yes"}})
+         (om/build radio-with-label app {:opts {:value 1 :text "Ok"}})
+         (om/build radio-with-label app {:opts {:value 2 :text "No"}}))))))
 
 (defn choice-tally [vote owner opts]
   (reify
@@ -161,58 +166,111 @@
 (defn choice-data [choice owner opts]
   (reify
     om/IRender
-    (render [this]
+    (render [_]
       (dom/div
        #js {:className "choice-data"}
        (om/build-all choice-tally (sort-by :value (:votes choice)) {})))))
 
 (defn choice-view [choice owner opts]
   (reify
-    om/IRender
-    (render [this]
+    om/IRenderState
+    (render-state [_ state]
       (dom/li
        #js {:className "choice"}
        (om/build choice-form choice {})
        (dom/div #js {:className "choice-title"} (:title choice))
        (om/build choice-data choice {})
-       (om/build comments-view choice {})))))
+       (om/build comments-view choice {:state state})))))
 
 (defn choices-view [app owner opts]
-  (om/component
-   (dom/div
-    #js {:className "choices-box"}
-    (apply
-     dom/ul {:className "choices"}
-     (om/build-all choice-view app {:key :id})))))
+  (reify
+    om/IRenderState
+    (render-state [_ state]
+      (dom/div
+       #js {:className "choices-box"}
+       (apply
+        dom/ul {:className "choices"}
+        (om/build-all choice-view app {:key :id :state state}))))))
 
+(defn login [app owner]
+  (let [user  (-> (om/get-node owner "name") .-value)]
+    (om/update! app assoc-in [:user] {:id (guid)
+                                      :name user})
+    (put! (:modal-chan (om/get-shared owner)) :none)))
 
-(defn poop [vote owner opts]
+(defn login-modal [app owner opts]
   (reify
     om/IRender
     (render [this]
       (dom/div
-       #js {:className "vote"} "poop"))))
+       #js {:className "login-modal"}
+       (dom/h2 nil "Login")
+       (dom/form
+        #js {:onSubmit (fn [e]
+                         (.preventDefault e)
+                         (login app owner))}
+        (dom/div
+         #js {:className "login-field"}
+         (dom/label #js {:htmlFor "login-username"} "username")
+         (dom/input #js {:type "text" :id "login-username" :name "username" :ref "name"}))
+        (dom/div
+         #js {:className "login-field"}
+         (dom/label #js {:htmlFor "login-password"} "password")
+         (dom/input #js {:type "password" :id "login-password" :disable true :name "password"}))
+        (dom/input #js {:type "submit" 
+                        :value "Login" 
+                        :ref "submit"}))))))
 
 (defn vote [vote owner opts]
   (reify
-    om/IRender
-    (render [this]
+    om/IRenderState
+    (render-state [this state]
       (dom/div
        #js {:className "vote"}
        (dom/h2 #js {:className "vote-title"} (:title vote))
        (dom/div #js {:className "vote-user"} (str "by " (:user vote)))
-       (om/build choices-view (:choices vote) {:key :id})
-       (om/build comments-view vote)
-       ))))
+       (om/build choices-view (:choices vote) {:key :id
+                                               :state state})
+       (om/build comments-view vote {:state state})))))
 
+(defn login-button [app owner] 
+  (om/component
+   (let [user (:current-user (om/get-state owner))]
+     (if user
+       (dom/button #js {:onClick #(om/update! app assoc-in [:user] nil)} "logout")
+       (dom/button #js {:onClick #(require-login! owner)} "login")))))
 
 (defn ringi-app [app owner]
   (reify
-    om/IRender
-    (render [this]
+    om/IWillMount
+    (will-mount [_]
+      (let [modal (:modal-chan (om/get-shared owner))]
+        (go
+         (loop []
+           (let [current-modal (<! modal)]
+             (om/set-state! owner :modal current-modal)
+             (recur))))))
+    om/IRenderState
+    (render-state [this {:keys [modal current-user] :as state}]
       (dom/div
        #js {:className "ringi"}
+       (condp = modal
+         :login (om/build login-modal app)
+         :none nil)
+       (when (not (= modal :none)) (dom/div #js {:className "modal-background"}))
        (dom/h1 nil "ringi")
-       (om/build vote (:vote app) {})))))
+       (om/build login-button app {:state state})
+       (when current-user
+         (dom/div 
+          #js {:className "current-user"}
+          (str "currently logged in as: " (:name current-user))))
+       (om/build vote (:vote app) {:state {:current-user current-user}})))))
 
-(om/root app-state (shared-state) ringi-app (. js/document (getElementById "content")))
+(om/root 
+ app-data
+ shared-data 
+ (fn [app owner]
+   (om/component 
+    (om/build ringi-app app {:state      {:current-user (:user @app)}
+                             :init-state {:modal :none}})))
+ (. js/document (getElementById "content")))
