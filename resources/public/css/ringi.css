@@ -1,6 +1,34 @@
 body {
+  font-family: 'Merriweather', serif;
+  margin: 0;
+}
+
+h1, h2, h3 {
+  margin: 0;
+}
+
+a:link {
+  color: black;
+  text-decoration: none;
+}
+
+a:visited {
+  color: black;
+  text-decoration : none;
+}
+
+a:hover {
+  color: black;
+  text-decoration : none;
+}
+
+a:active{
+  color: black;
+  text-decoration : none;
+}
+
+.content {
   margin: 20px;
-  font-family: 'Glegoo', serif;
 }
 
 button {
@@ -16,86 +44,78 @@ ul {
   margin: 0;
 }
 
-h4 {
-  font-size: 16px;
+.topics {
+  
+}
+
+
+.topics-list-item {
+  font-size: 24px;
+  margin: 20px;
+}
+
+.topics-author {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.topic {
+  margin: 20px;
+}
+
+.topic-title {
+  font-weight: normal;
   margin: 0;
 }
 
-h1 {
-  margin: 20px;
-  font-size: 42px;
-}
-
-h1 span:last-child {
-  font-size: 24px;
-  color: #666;
-  margin-left: 10px;
-}
-
-.vote {
-  margin: 20px;
-}
-
-.vote-title {
-  margin: 10px;
-}
-
-.vote-user {
-  padding: 10px;
+.topic-author {
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .choice {
   padding: 10px;
-  border-bottom: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  min-width: 600px;
 }
 
 .choice-title {
   padding: 10px;
   overflow: hidden;
   font-size: 24px;
-  font-weight: bold;
+  font-weight: normal;
 }
 
-.choice-form {
+.vote-form {
+  display: inline-block;
   height: 100%;
-  float: left;
   padding: 20px;
+  padding-left: 0;
 }
 
-.choice-data {
+.vote-form div {
+  padding: 0.4em;
+  text-transform: capitalize;
+}
+
+.vote-form div > label {
+  margin-left: 0.5em;
+}
+
+.choice {
+  width: 100%;
+  clear: left;
+}
+
+.choice-container {
+  display: inline-block;
+}
+
+.votes {
   overflow: hidden;
   padding: 10px;
 }
-
-.comments {
-  padding: 10px;
-  overflow: hidden;
-  min-width: 200px;
-}
-
-.vote > .comments {
-  max-width: 600px;
-  border-top: 1px solid #ccc;
-}
-
 
 .comment {
   margin: 10px 0;
-}
-
-.choices-box {
-  float: left;
-  border-left: 1px solid #ccc;
-}
-
-.choices-box > ul > li:first-child {
-  border-top: 1px solid #ccc;
-}
-
-.choices-box > ul > li:last-child {
-  border-bottom: none;
 }
 
 .comment-user {
@@ -103,91 +123,171 @@ h1 span:last-child {
   font-size: 12px;
 }
 
-.choice-form div {
-  padding-bottom: 0.5em;
-}
-
-.choice-form label {
-  padding-bottom: 0.5em;
-  margin-left: 10px;
-  text-transform: uppercase;
-}
-
-.choice-tally {
+.vote {
   display: inline-block;
   margin-left: 1px;
   float: left;
   position: relative;
 }
 
-.choice-tally-info {
+.vote-info {
   position: absolute;
 }
 
-.choice-tally.v0 {
+.vote.yes {
   width: 40px;
   height: 40px;
   background-color: lime;
 }
 
-.choice-tally.v1 {
+.vote.ok {
   width: 20px;
   height: 40px;
   background-color: greenyellow;
 }
 
-.choice-tally.v2 {
+.vote.no {
   width: 40px;
   height: 10px;
   background-color: red;
   margin-top: 1px;
 }
 
-.choice-tally-info {
+.vote-info {
   display: none;
   position: absolute;
 }
 
-.v1 + .v2  {
+.yes + .no , .ok + .no  {
   clear: left;
 }
 
-.modal-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 11;
-  background-color: rgba(0, 0, 0, 0.498039);
+.menu {
+  color: black;
+  background-color: lightgrey;
+  padding: 20px;
+  line-height: 1em;
 }
 
-.login-modal {
-  position: absolute;
+.menu-title {
+  display: inline;
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: inset 2px 2px #ff0000;
+}
+
+.menu-list {
+  display: inline;
+  float: right;
+}
+
+.menu-list-item {
+  display: inline;
+  margin: 0 10px;
+}
+
+.register {
+  font-size: 18px;
   width: 300px;
-  height: auto;
-  background-color: white;
-  border: 1px solid #000;
-  padding: 40px;
-  z-index: 999;
-  left:0;
-  right:0;
-  margin-left:auto;
-  margin-right:auto;
-  text-align: center;
-}
-.login form {
-  text-align: left;}
-
-.login h3 {
-  margin: 0px;
-}
-.login-field {
-  text-align: center;
-
-  margin: 10px 0;
+  margin: 40px auto;
 }
 
-.login-field label {
-  width: 200;
+.register-title {
+  background-color: lightgrey;
+  display: block;
+  font-weight: bold;
+  padding: 20px;
+  line-height: 1em;
+  margin-bottom: 1em;
+}
+
+.register label {
+  display: block;
+  padding: 0 20px;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.register input[type=email], .register input[type=text], .register input[type=password] {
+  border: 1px solid lightgrey;
+  display: block;
+  margin: auto;
+  margin-bottom: 24px;
+  padding: 8px;
+  width: 240px;
+}
+
+.register-button {
+  border: none;
+  background-color: lightgrey;
+  font-family: inherit;  
+  font-size: 14px;
+  display: block;
+  line-height: 1em;
+  margin: 8px 20px;
+  padding: 8px 16px;
+  float: right;
+  cursor: pointer;
+}
+
+.login {
+  font-size: 18px;
+  width: 300px;
+  margin: 40px auto;
+}
+
+.login-title {
+  background-color: lightgrey;
+  display: block;
+  font-weight: bold;
+  padding: 20px;
+  line-height: 1em;
+  margin-bottom: 1em;
+}
+
+.login label {
+  display: block;
+  padding: 0 20px;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.login input[type=text], .login input[type=password] {
+  border: 1px solid lightgrey;
+  display: block;
+  margin: auto;
+  margin-bottom: 24px;
+  padding: 8px;
+  width: 240px;
+}
+
+.login-button {
+  border: none;
+  background-color: lightgrey;
+  font-family: inherit;  
+  font-size: 14px;
+  display: block;
+  line-height: 1em;
+  margin: 8px 20px;
+  padding: 8px 16px;
+  float: right;
+  cursor: pointer;
+}
+
+@keyframes load {
+  25% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  75% {
+    opacity: 1;
+  }
+}
+
+.loading {
+  animation-name: load;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
 }

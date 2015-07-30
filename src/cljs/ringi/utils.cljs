@@ -4,3 +4,8 @@
 
 (defn guid []
   (.getNextUniqueId (.getInstance IdGenerator)))
+
+(defn parse-uuid [maybe-uuid]
+  (if (= (type maybe-uuid) cljs.core/UUID)
+    maybe-uuid
+    (UUID. uuid nil)))

@@ -1,0 +1,176 @@
+{:ringi.schema/init
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :user/uid
+     :db/valueType :db.type/uuid
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db/doc "public id"
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :user/name
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db/doc "username"
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :user/email
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db/doc "email"
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :user/password
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/doc "password"
+     :db.install/_attribute :db.part/db}]
+   
+   ;; comments
+   
+   [{:db/id #db/id[:db.part/db]
+     :db/ident :comments
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db/isComponent true
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :comment/uid
+     :db/valueType :db.type/uuid
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db.install/_attribute :db.part/db}    
+    {:db/id #db/id[:db.part/db]
+     :db/ident :comment/body
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :comment/author
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]
+
+   ;; timestamps
+   
+   [{:db/id #db/id[:db.part/db]
+     :db/ident :created
+     :db/valueType :db.type/instant
+     :db/cardinality :db.cardinality/one
+     :db/index true
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :updated
+     :db/valueType :db.type/instant
+     :db/cardinality :db.cardinality/one
+     :db/index true
+     :db.install/_attribute :db.part/db}]
+   
+   ;; topics
+   
+   [{:db/id #db/id[:db.part/db]
+     :db/ident :topic/uid
+     :db/valueType :db.type/uuid
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db.install/_attribute :db.part/db}    
+    {:db/id #db/id[:db.part/db]
+     :db/ident :topic/title
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/fulltext true
+     :db/index true
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :topic/description
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/fulltext true
+     :db/index true
+     :db.install/_attribute :db.part/db}]
+
+   [{:db/id #db/id[:db.part/db]
+     :db/ident :choices
+     :db/isComponent true
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :choice/uid
+     :db/valueType :db.type/uuid
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/identity
+     :db.install/_attribute :db.part/db}    
+    {:db/id #db/id[:db.part/db]
+     :db/ident :choice/title
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/fulltext true
+     :db/index true
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :choice/author
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
+     :db/ident :votes
+     :db/valueType :db.type/ref
+     :db/isComponent true
+     :db/cardinality :db.cardinality/many
+     :db.install/_attribute :db.part/db}]
+
+   [{:db/id #db/id[:db.part/db]
+     :db/ident :vote/author
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}    
+    {:db/id #db/id[:db.part/db]
+     :db/ident :vote/value
+     :db/noHistory true
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]
+
+   ;; idents
+
+   [{:db/id #db/id [:db.part/user] :db/ident :vote.value/yes}
+    {:db/id #db/id [:db.part/user] :db/ident :vote.value/no}
+    {:db/id #db/id [:db.part/user] :db/ident :vote.value/ok}]
+
+   ;; functions
+   
+   [{:db/id #db/id [:db.part/user]
+     :db/ident      :user/register
+     :db/fn  #db/fn{:lang :clojure
+                    :params [db id name email password]
+                    :code (if (seq (d/q '[:find ?e
+                                          :in $ ?name ?email
+                                          :where (or-join [?e ?name ?email]
+                                                          [?e :user/name  ?name]
+                                                          [?e :user/email ?email])]
+                                        db name email))
+                            (throw (RuntimeException. "Username or email already taken."))
+                            [{:db/id         id
+                              :user/name     name
+                              :user/email    email
+                              :user/password password}])}}
+    
+    {:db/id #db/id [:db.part/user]
+     :db/ident      :vote
+     :db/doc        "vote on a thing"
+     :db/fn #db/fn {:lang :clojure
+                    :params [db thing user value]
+                    :code (if-let [vote (ffirst (d/q '[:find ?vote
+                                                       :in $ ?thing ?user
+                                                       :where [?thing :votes ?vote]
+                                                       [?vote :vote/author ?user]]
+                                                     db thing user))]
+                            [{:db/id       vote
+                              :vote/value  value}]
+                            [{:db/id       (d/tempid :db.part/user)
+                              :_votes      thing
+                              :vote/value  value
+                              :vote/author user}])}}]]}}

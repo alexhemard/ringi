@@ -2,70 +2,74 @@
   :description "FIXME: write this!"
   :url "http://ringi.co/"
 
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.reader "0.8.2"]
-                 [org.clojure/tools.logging "0.2.6"]
-                 [org.clojure/tools.cli "0.2.4"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/tools.reader "0.9.2"]
+                 [org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [org.clojure/tools.nrepl "0.2.10"]
+
                  ;; CLJ
-                 [bultitude "0.2.2"]
-                 [cheshire "5.2.0"]
-                 [clj-oauth "1.4.1"]
-                 [commons-codec "1.9"]
-                 [com.jolbox/bonecp "0.8.0.RELEASE"]
-                 [com.stuartsierra/component "0.2.0"]
-                 [compojure "1.1.6"]
-                 [crypto-password "0.1.1"]
-                 [http-kit "2.1.10"]
-                 [honeysql "0.4.3"]
-                 [org.clojure/java.jdbc "0.3.3"]
-                 [org.postgresql/postgresql "9.2-1003-jdbc4"]
-                 [ring/ring-core "1.2.0"]
-                 [ring/ring-devel "1.2.0"]
-                 [slingshot "0.10.3"]
+
+                 [cheshire "5.4.0"]
+                 [clj-http "2.0.0"]
+                 [clj-oauth "1.5.2"]
+                 [commons-codec "1.10"]
+                 [com.stuartsierra/component "0.2.3"]
+                 [compojure "1.4.0"]
+                 [crypto-password "0.1.3"]
+                 [com.datomic/datomic-pro "0.9.5201" :exclusions [joda-time]]
+                 [ring "1.4.0"]
+                 [aleph "0.4.0"]
+                 [hiccup "1.0.5"]
+                 [slingshot "0.12.2"]
                  [jkkramer/verily "0.6.0"]
+
                  ;; CLJS
-                 [org.clojure/clojurescript "0.0-2173"]
-                 [org.clojure/core.async "0.1.278.0-76b25b-alpha"]
-                 [cljs-http "0.1.8"]
-                 [secretary "1.1.0"]
-                 [om "0.5.3"]]
 
+                 [org.clojure/clojurescript "0.0-3308"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [datascript "0.11.6"]
+                 [cljs-http "0.1.35"]
+                 [secretary "1.2.1"]
+                 [reagent "0.5.0" :exclusions [cljsjs/react]]
+                 [cljsjs/react-with-addons "0.13.3-0"]]
+
+  :repositories {"my.datomic.com" {:url "~/.m2"}}
   :profiles {:dev {:source-paths ["dev"]
-                   :plugins      [[com.aphyr/prism "0.1.1"]]
-                   :dependencies [[org.clojure/tools.namespace "0.2.4"]
-                                  [org.clojure/java.classpath "0.2.2"]
-                                  [com.aphyr/prism "0.1.1"]]}}
+                   :dependencies [[org.clojure/tools.namespace "0.2.10"]
+                                  [org.clojure/java.classpath "0.2.2"]]}}
 
-  :plugins [[lein-cljsbuild "1.0.2"]
-            [lein-ring "0.8.7"]
-            [lein-pdo "0.1.1"]]
+  :plugins [[lein-cljsbuild "1.0.6"]
+            [lein-ring "0.9.6"]
+            [cider/cider-nrepl "0.9.1"]
+            [lein-figwheel "0.3.7"]]
 
-  :aliases {"dev"     ["pdo" "cljsbuild" "auto" "dev," "ring" "server-headless"]
+  :aliases {"dev"     ["cljsbuild" "auto" "dev," "ring" "server-headless"]
             "migrate" ["run" "-m" "ringi.db.migrate"]}
 
   :test-paths ["test"]
 
   :main ringi.system
 
+  :figwheel {:nrepl-port 7002}
+
   :source-paths ["src/clj"]
 
   :cljsbuild {
     :builds [{:id "dev"
               :source-paths ["src/cljs"]
-              :compiler {:output-to "resources/public/js/ringi.js"
+              :compiler {:main ringi.core
+                         :output-to "resources/public/js/ringi.js"
+                         :source-map "resources/public/js/ringi.js.map"
                          :output-dir "resources/public/js/out"
-                         :optimizations :none
-                         :source-map true
-                         :externs ["react/externs/react.js"]}}
+                         :source-map-path "js/out"
+                         :asset-path "/js/out"
+                         :optimizations :none}}
              {:id "release"
               :source-paths ["src/cljs"]
               :compiler {:output-dir "resources/public/js"
-                         :output-to "resources/public/js/ringi.js"
-                         :source-map "resources/public/js/ringi.js.map"
+                         :output-to "ringi.js"
+                         :asset-path "/"
+                         :main ringi.core
                          :optimizations :advanced
-                         :pretty-print false
-                         :output-wrapper false
-                         :preamble ["react/react.min.js"]
-                         :externs ["react/externs/react.js"]
-                         :closure-warnings
-                         {:non-standard-jsdoc :off}}}]})
+                         :pretty-print false}}]})

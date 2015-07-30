@@ -1,13 +1,11 @@
 (ns ringi.util
-    (:require [clojure.java.jdbc :as jdbc]
-              [crypto.password.pbkdf2 :as p]
-              [cheshire.core      :as json]
-              [ringi.uuid :refer [b64->uuid uuid->b64]]
-              [slingshot.slingshot :refer [try+ throw+]])
+  (:require  [datomic.api :as d]
+             [crypto.password.pbkdf2 :as p]
+             [cheshire.core          :as json]
+             [ringi.uuid             :refer [b64->uuid
+                                             uuid->b64]]
+             [slingshot.slingshot    :refer [try+ throw+]])
     (:import (java.util UUID)))
-
-(defn reorder-map [map keys]
-  (apply array-map (mapcat identity (for [k keys :when (k map)] [k (k map)]))))
 
 (defn parse-int
   [s]
@@ -71,3 +69,11 @@
       (f req)
       (catch [:type ::unauthorized] _
         (unauthorized-response)))))
+
+(defn molester
+  "Touch all name attributes of entities"
+  [qes-result & attrs]
+  (mapv
+   (fn [ents]
+     (mapv #(select-keys % attrs) ents))
+   qes-result))

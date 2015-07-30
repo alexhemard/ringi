@@ -1,16 +1,5 @@
-(ns ringi.db.migrate
-  (:require [datomic.api     :as d]
-            [clojure.java.io :as io]
-            [ringi.config    :refer [config]]))
-
-(def schemas
-  ["migrations/schema.edn"])
-
-(def schema-map
-  (apply merge
-   (map
-    #(read-string (slurp (io/resource %)))
-    schemas)))
+(ns ringi.schema
+  (require [datomic.api :as d]))
 
 (defn has-attribute?
   "Does database have an attribute named attr-name?"
@@ -47,7 +36,6 @@
 
 (defn ensure-schemas
   "Ensure that schemas are installed.
-
       schema-attr   a keyword valued attribute of a transaction,
                     naming the schema
       schema-map    a map from schema names to schema installation
@@ -64,17 +52,17 @@
         (apply ensure-schemas conn schema-attr schema-map requires)
         (if txes
           (doseq [tx txes]
+            ;; hrm, could mark the last tx specially
             (d/transact conn (cons {:db/id #db/id [:db.part/tx]
-                                    schema-attr schema-name}
-                                   tx)))
+                                  schema-attr schema-name}
+                                 tx)))
           (throw (ex-info (str "No data provided for schema" schema-name)
                           {:schema/missing schema-name})))))))
 
-(defn migrate
-  [uri]
-  (d/create-database uri)
-  (let [conn (d/connect uri)]
-    (apply ensure-schemas (into [conn :ringi/schema schema-map] (keys schema-map)))))
+(defn schema-map []
+  (-> (clojure.java.io/resource "migrations/schema.edn")
+      slurp
+      read-string))
 
-(defn -main []
-  (migrate (:db (config))))
+(defn migrate [conn]
+  (ensure-schemas conn :ringi/schema (schema-map) :ringi.schema/init))

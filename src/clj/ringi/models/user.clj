@@ -1,59 +1,85 @@
 (ns ringi.models.user
-    (:require [clojure.java.jdbc      :as jdbc]
-              [honeysql.core          :as sql]
-              [honeysql.helpers       :refer :all]
-              [crypto.password.pbkdf2 :as p]))
+  (:require [datomic.api :as d]
+            [ringi.query :refer [qe find-by qes]]
+            [ringi.mapper :refer [defmap one many]]
+            [crypto.password.pbkdf2 :as p]))
 
+(defmap user->map
+  (one :id :from :user/uid)
+  (one :name :from :user/name)
+  (one :email :from :user/email))
 
-(defn- fetch-all [db query]
-  (-> (jdbc/query
-       db (-> query
-              (sql/format :quoting :ansi)))))
+(defn- fetch-all [conn query])
 
-(defn fetch [db id]
-  (first
-   (fetch-all
-    db
-    (-> (select :users.*)
-        (from   :users)
-        (where  [:= :id id])))))
+(defn find-by-id [conn id]
+  (find-by (d/db conn) :user/uid id))
 
-(defn fetch-by-twitter-uid [db uid]
-  (first
-   (fetch-all
-    db
-    (-> (select :users.* [:providers_users.uid :uid])
-        (from :users)
-        (join :providers_users ["=" :providers_users.user_id :users.id]
-              :providers ["=" :providers.id :providers_users.provider_id])
-        (where [:and
-                ["=" :providers.name "twitter"]
-                ["=" :providers_users.uid uid]])))))
+(defn find-by-twitter-uid [conn uid]
+  (let [db (d/db conn)]
+    (d/entity db
+              (ffirst
+               (d/q '[:find ?u
+                      :in $ ?uid
+                      :where [?u :twitter/oauth ?o]
+                      [?o :twitter/uid ?uid]]
+                    db
+                    uid)))))
 
-
-(defn create [db {:keys [password] :as data}]
-  (first (jdbc/insert! db :users data)))
-
-(defn create-provider-user [db data]
-  (first (jdbc/insert! db :providers_users data)))
-
-(defn create-provider-for-user [db access-token & user]
-  (jdbc/with-db-transaction [db db]
-    (let [token    (:oauth-token access-token)
-          secret   (:oauth-token-secret access-token)
-          name     (:screen_name access-token)
-          uid      (:user_id access-token)
-          user     (if user user (create db {:name name}))
-          provider (first (jdbc/insert! db {:user_id (:id user)
-                                            :provider_id #uuid "c87c7d3d-ee38-4897-a129-9f43ea21a46d"
-                                            :uid uid
-                                            :token token
-                                            :secret secret}))]
-      user)))
-
-
-(defn fetch-or-create-by-access-token [db access-token & current-user]
-  (let [user (fetch-by-twitter-uid db (:user_id access-token))]
-    (if user
+(defn find-or-create-by-twitter-oauth [conn oauth]
+  (let [db (d/db conn)]
+    (if-let [user (find-by-twitter-uid db (:twitter/uid oauth))]
       user
-      (create-provider-for-user db access-token current-user))))
+      (do
+        (d/transact conn [[:touchUserByTwitterOauth oauth]])
+        (find-by-twitter-uid db (:twitter/uid oauth))))))
+
+(defn create
+  [conn {:keys [username email password] :as params}]
+  (d/transact
+   conn
+   [{:db/id         (d/tempid :db.part/user)
+     :user/uid      (d/squuid)
+     :user/name      username
+     :user/email     email
+     :user/password (p/encrypt password)}]))
+
+(defn find-by-name-or-email [conn name-or-email]
+  (let [db (d/db conn)]
+    (d/entity
+     db
+     (ffirst
+      (d/q '[:find ?e
+             :in $ ?ne
+             :where (or [?e :user/name  ?ne]
+                        [?e :user/email ?ne])]
+           db
+           name-or-email)))))
+
+(defn find-by-access-token [conn access-token]
+  (let [db (d/db conn)] 
+    (ffirst
+     (d/q '[:find ?u
+            :in $ ?t
+            :where [?u :user/providers ?p]
+            [?p :provider/type :provider.type/twitter]
+            [?p :provier/token ?t]]
+          db
+          (:oauth-token access-token)))))
+
+(defn create-provider [conn access-token & user]
+  (let [token    (:oauth-token access-token)
+        secret   (:oauth-token-secret access-token)
+        name     (:screen_name access-token)
+        uid      (:user_id access-token)
+        user     (first user)
+        new-user (when-not user (d/tempid :db/part/user))
+        user     (or user new-user)
+        user-tx  [:constructUser {:db/id user
+                                  :user/name name}]
+        txes   [[:createProvider user
+                 :provider.type/twitter
+                 {:provider/token token
+                  :provider/secret secret
+                  :provider/uid uid}]]
+        txes (if new-user (cons user-tx txes) txes)]
+    (d/transact conn txes)))

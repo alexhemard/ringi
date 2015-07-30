@@ -1,19 +1,20 @@
 (ns ringi.auth
-  (:require [compojure.core     :refer [routes context GET]]
-            [ring.util.response :refer [redirect]]
-            [ringi.models.user  :as    user]
-            [ringi.util         :refer [parse-uuid]]
-            [oauth.client       :as    oauth]))
+  (:require [compojure.core         :refer [routes context GET]]
+            [ring.util.response     :refer [redirect]]
+            [ringi.models.user      :as    user]
+            [clojure.tools.logging  :as    log]
+            [ringi.util             :refer [parse-uuid]]
+            [oauth.client           :as    oauth]))
 
 (defn current-user [req]
-  (::user req))
+  (:user req))
 
 (defn wrap-user [f ctx]
   (fn [req]
-    (let [db (:db ctx)
+    (let [conn (get-in ctx [:datomic :conn])
           session (:session req)
           user-id (parse-uuid (:user_id session))
-          user    (user/fetch db user-id)]
+          user    (when user-id (user/find-by-id conn user-id))]
       (if user
-        (f (assoc req :user user))
-        (f req)))))
+        (f (assoc-in req [:session :user] user))
+        (f (assoc-in req [:session :user] user-id))))))

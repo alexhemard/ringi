@@ -7,19 +7,32 @@
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.session        :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
-            [cheshire.core                  :as    json]
+            [cheshire.core                  :as     json]
+            [hiccup.page                    :refer [html5 include-css include-js]]
             [ringi.routes.api               :refer [api-routes]]
             [ringi.routes.auth              :refer [auth-routes]]
             [ringi.auth                     :refer [wrap-user]]
             [ringi.util                     :refer [wrap-slingshot]]))
 
+(defn index []
+  (html5
+    [:head {:lang "en"}
+     [:title "Ringi"]
+     (include-css "/css/ringi.css")
+     (include-css "http://fonts.googleapis.com/css?family=Merriweather")]
+    [:body
+     [:div {:id "root"}
+      [:div {:class "menu"}
+       [:h1 {:class "menu-title loading"} [:a {:href "/"} "Ringi"]]]]
+     (include-js "/js/ringi.js")]))
+
 (defn app-routes [ctx]
   (routes
-   (GET "/" [] (resp/redirect "/index.html"))
    (context "/v1" [] (api-routes ctx))
    (auth-routes ctx)
    (route/resources "/")
-   (route/not-found "page not foundzzz")))
+   (GET "*/*" [] (index)) 
+   (route/not-found "404 Not Found")))  
 
 (defn app
   [ctx]
