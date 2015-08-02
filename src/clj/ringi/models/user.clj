@@ -1,47 +1,29 @@
 (ns ringi.models.user
   (:require [datomic.api :as d]
             [ringi.query :refer [qe find-by qes]]
-            [ringi.mapper :refer [defmap one many]]
+            [ringi.mapper :refer [defmap]]
             [crypto.password.pbkdf2 :as p]))
 
-(defmap user->map
-  (one :id :from :user/uid)
-  (one :name :from :user/name)
-  (one :email :from :user/email))
+(defmap user->map [m]
+  [:id   :user/user
+   :name :user/name])
 
 (defn- fetch-all [conn query])
 
-(defn find-by-id [conn id]
+(defn fetch [conn id]
   (find-by (d/db conn) :user/uid id))
 
-(defn find-by-twitter-uid [conn uid]
-  (let [db (d/db conn)]
-    (d/entity db
-              (ffirst
-               (d/q '[:find ?u
-                      :in $ ?uid
-                      :where [?u :twitter/oauth ?o]
-                      [?o :twitter/uid ?uid]]
-                    db
-                    uid)))))
+(defn find-by-twitter-uid [conn uid])
 
-(defn find-or-create-by-twitter-oauth [conn oauth]
-  (let [db (d/db conn)]
-    (if-let [user (find-by-twitter-uid db (:twitter/uid oauth))]
-      user
-      (do
-        (d/transact conn [[:touchUserByTwitterOauth oauth]])
-        (find-by-twitter-uid db (:twitter/uid oauth))))))
+(defn find-or-create-by-twitter-oauth [conn oauth])
 
-(defn create
-  [conn {:keys [username email password] :as params}]
-  (d/transact
-   conn
-   [{:db/id         (d/tempid :db.part/user)
-     :user/uid      (d/squuid)
-     :user/name      username
-     :user/email     email
-     :user/password (p/encrypt password)}]))
+(defn create [conn {:keys [username email password] :as params}]
+  (let [user-id (d/tempid :db.part/user)
+        {:keys [tempids db-after]} @(d/transact
+                                     conn
+                                     [[:user/create (d/tempid :db.part/user) username email password]])
+        user  (d/resolve-tempid db-after tempids user-id)]
+    (d/entity db-after user)))
 
 (defn find-by-name-or-email [conn name-or-email]
   (let [db (d/db conn)]
@@ -55,16 +37,7 @@
            db
            name-or-email)))))
 
-(defn find-by-access-token [conn access-token]
-  (let [db (d/db conn)] 
-    (ffirst
-     (d/q '[:find ?u
-            :in $ ?t
-            :where [?u :user/providers ?p]
-            [?p :provider/type :provider.type/twitter]
-            [?p :provier/token ?t]]
-          db
-          (:oauth-token access-token)))))
+(defn find-by-access-token [conn access-token])
 
 (defn create-provider [conn access-token & user]
   (let [token    (:oauth-token access-token)

@@ -1,51 +1,59 @@
 (ns ringi.models.topic
     (:require [datomic.api  :as d]
               [ringi.query :refer [qe qes find-by]]
-              [ringi.mapper :refer [defmap one many]]))
+              [ringi.mapper :refer [defmap]]))
 
-(defmap author->map
-  (one :id :from :user/gid)
-  (one :name :from :user/name))
+(defmap user->map [m]
+  [:id   :user/user
+   :name :user/name])
 
-(defmap votes->map
-  (one :author :from :choice/author
-               :fn author->map)
-  (one :value  :from :vote/value))
+(defmap votes->map [m]
+  [:author {:from :vote/author
+            :fn user->map}
+   :value  {:from :vote/value
+            :fn name}])
 
-(defmap choice->map
-  (one :id     :from :choice/gid)
-  (one :author :from :choice/author
-               :fn author->map)
-  (many :votes :from :choice/votes
-               :fn votes->map))
+(defmap choice->map [m]
+  [:id     :choice/uid
+   :author {:from :choice/author
+            :fn user->map}
+   :title  :choice/title    
+   :votes {:from :votes
+           :fn votes->map}])
 
-(defmap topic->map
-  (one  :id          :from :topic/gid)
-  (one  :author      :from :topic/author
-                     :fn author->map)
-  (one  :title       :from :topic/title)
-  (one  :description :from :topic/description)
-  (many :choices     :from :topic/choices
-                     :fn choice->map))
+(defmap topic->map [m]
+  [:id          :topic/uid
+   :title       :topic/title
+   :description :topic/description
+   :author      {:from :topic/author
+                 :fn user->map}
+   :choices     {:from :choices
+                 :fn choice->map
+                 :cardinality :many}])
 
-(defn find-topics [db]
-  (qes '[:find ?t
-         :where [?t :topic/title]]
-       db))
+(defmap topic->map [m]
+  [:id          :topic/uid
+   :title       :topic/title
+   :description :topic/description
+   :author      {:from :topic/author
+                 :fn user->map}
+   :choices     {:from        :choices
+                 :fn          choice->map
+                 :cardinality :many}])
 
-(defn topic-leader [db t]
-  (d/q '[:find (count ?vv)
-         :in $ ?t
-         :where [?t :topic/choices ?c]]
-       db
-       t))
+(defn fetch [conn id]
+  (let [db (d/db conn)]
+    (qe '[:find ?t
+          :in $ ?t
+          :where [?t]]
+        (d/db conn) id)))
 
-(defn topics-count [db]
-  (ffirst (d/q '[:find (count ?t)
-                 :where [?t :topic/title]]
-               db)))
+(defn fetch-all [conn]
+  (let [db (d/db conn)]
+    (mapv first (qes '[:find ?t
+                       :in $
+                       :where [?t :topic/uid]]
+                     db))))
 
-(defn choices-count [db topic]
-  (ffirst (d/q '[:find (count ?t)
-                 :where [?t :topic/title]]
-               db)))
+(defn create [conn data]
+  @(d/transact conn data))
