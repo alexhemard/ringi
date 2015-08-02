@@ -1,0 +1,6 @@
+{:users
+ [{:db/id #db/id [:db.part/user -1]
+   :user/name     "alex"
+   :user/uid       #uuid "55bb8e69-f3a9-4449-b521-98411cc1f2a9"
+   :user/email    "swaggo@gmail.com"
+   :user/password "pizza"}]}

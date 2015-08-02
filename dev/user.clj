@@ -6,6 +6,7 @@
             [clojure.test :as test]
             [ringi.system]
             [ringi.config]
+            [com.stuartsierra.component :as component]
             [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
 
 (def system nil)
@@ -19,13 +20,12 @@
 (defn start
   "Starts the current development system."
   []
-  (alter-var-root #'system  #(.start %)))
+  (alter-var-root #'system  component/start-system))
 
 (defn stop
   "Shuts down and destroys the current development system."
   []
-  (alter-var-root #'system
-    (fn [s] (when s (.stop s)))))
+  (alter-var-root #'system component/stop-system))
 
 (defn go
   "Initializes the current development system and starts it running."

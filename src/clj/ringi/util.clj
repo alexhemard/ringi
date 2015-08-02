@@ -52,9 +52,7 @@
 (defn json-response [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"}
-   :body (json/generate-string (-> data
-                                   (jazz-up-json))
-                               {:pretty true})})
+   :body (json/generate-string (jazz-up-json data) {:pretty true})})
 
 (defn unauthorized-response []
   {:status 401})
@@ -69,11 +67,3 @@
       (f req)
       (catch [:type ::unauthorized] _
         (unauthorized-response)))))
-
-(defn molester
-  "Touch all name attributes of entities"
-  [qes-result & attrs]
-  (mapv
-   (fn [ents]
-     (mapv #(select-keys % attrs) ents))
-   qes-result))

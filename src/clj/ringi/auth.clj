@@ -14,7 +14,7 @@
     (let [conn (get-in ctx [:datomic :conn])
           session (:session req)
           user-id (parse-uuid (:user_id session))
-          user    (when user-id (user/find-by-id conn user-id))]
+          user    (when user-id (user/fetch conn user-id))]
       (if user
         (f (assoc-in req [:session :user] user))
         (f (assoc-in req [:session :user] user-id))))))

@@ -84,6 +84,11 @@
      :db/index true
      :db.install/_attribute :db.part/db}
     {:db/id #db/id[:db.part/db]
+     :db/ident :topic/author
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}    
+    {:db/id #db/id[:db.part/db]
      :db/ident :topic/description
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
@@ -154,6 +159,7 @@
                                         db name email))
                             (throw (RuntimeException. "Username or email already taken."))
                             [{:db/id         id
+                              :user/uid      (d/squuid)
                               :user/name     name
                               :user/email    email
                               :user/password password}])}}
@@ -162,7 +168,7 @@
      :db/ident      :vote
      :db/doc        "vote on a thing"
      :db/fn #db/fn {:lang :clojure
-                    :params [db thing user value]
+                    :params [db user thing value]
                     :code (if-let [vote (ffirst (d/q '[:find ?vote
                                                        :in $ ?thing ?user
                                                        :where [?thing :votes ?vote]

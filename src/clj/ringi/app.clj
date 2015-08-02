@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component     :as    component]
             [compojure.handler              :as    handler]
             [compojure.route                :as    route]
-            [compojure.core                 :refer [GET POST PUT routes context]]
+            [compojure.core                 :refer [GET POST PUT PATCH routes context]]
             [ring.util.response             :as    resp]
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.session        :refer [wrap-session]]
@@ -42,7 +42,7 @@
       wrap-slingshot
       handler/api))
 
-(defrecord App [db handler]
+(defrecord App [datomic handler]
   component/Lifecycle
   (start [component]
     (assoc component :handler (app component)))

@@ -18,7 +18,6 @@
   datomic.Entity
   (e [ent] (:db/id ent)))
 
-
 (defn qe
   "Returns the single entity returned by a query."
   [query db & args]

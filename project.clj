@@ -35,14 +35,16 @@
                  [cljsjs/react-with-addons "0.13.3-0"]]
 
   :repositories {"my.datomic.com" {:url "~/.m2"}}
-  :profiles {:dev {:source-paths ["dev"]
+  :profiles {:test {:source-paths ["test"]}
+             :dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.10"]
                                   [org.clojure/java.classpath "0.2.2"]]}}
 
   :plugins [[lein-cljsbuild "1.0.6"]
             [lein-ring "0.9.6"]
             [cider/cider-nrepl "0.9.1"]
-            [lein-figwheel "0.3.7"]]
+            [lein-figwheel "0.3.7"]
+            [quickie "0.4.0"]]
 
   :aliases {"dev"     ["cljsbuild" "auto" "dev," "ring" "server-headless"]
             "migrate" ["run" "-m" "ringi.db.migrate"]}

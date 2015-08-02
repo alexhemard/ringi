@@ -1,0 +1,45 @@
+{:users
+ [{:db/id #db/id [:db.part/user -1]
+   :user/name     "alex"
+   :user/uid       #uuid "55bb8e69-f3a9-4449-b521-98411cc1f2a9"
+   :user/email    "swaggo@gmail.com"
+   :user/password "pizza"}
+  {:db/id #db/id [:db.part/user -2]
+   :user/name     "jake"
+   :user/uid      #uuid "55bb8e69-6e16-4203-bce0-9ef2b53cd863"
+   :user/email    "dank@gmail.com"
+   :user/password "pasta"}
+  {:db/id #db/id [:db.part/user -3]
+   :user/name     "cooldog"
+   :user/uid      #uuid "55bb8e69-7756-4d80-a54c-31feae614491"
+   :user/email    "dogs@dogman.com"
+   :user/password "woof"}
+  {:db/id #db/id [:db.part/user -4]
+   :user/name     "jeff"
+   :user/uid      #uuid "55bb8e69-db1d-4691-8a2b-62afcaea87e3"
+   :user/email    "jeff@hotmail.com"
+   :user/password "jeffpass"}]
+ :topics
+ [{:db/id  #db/id [:db.part/user -5]
+   :topic/uid #uuid "55bb8e69-03fe-4396-a556-d51c77ca50b0"
+   :topic/title "whats good fam"
+   :topic/description "swaggo"
+   :topic/author #db/id [:db.part/user -1]}]
+ :choices
+ [{:db/id #db/id [:db.part/user -6]
+   :choice/uid #uuid "55bb8e69-03fe-4396-a556-d51c77ca50b0"
+   :choice/title "nm what about u"
+   :choice/author  #db/id [:db.part/user -1]
+   :_choices #db/id [:db.part/user -5]}
+  {:db/id #db/id [:db.part/user -7]
+   :choice/uid #uuid "55bb8e69-ed03-4656-9fb3-4ccb178462e2"
+   :choice/title "ilu"
+   :choice/author #db/id [:db.part/user -3]
+   :_choices #db/id [:db.part/user -5]}]
+ :votes
+ [[:vote #db/id [:db.part/user -1] #db/id [:db.part/user -6] :vote.value/yes]
+  [:vote #db/id [:db.part/user -2] #db/id [:db.part/user -6] :vote.value/yes]
+  [:vote #db/id [:db.part/user -3] #db/id [:db.part/user -6] :vote.value/ok]
+  [:vote #db/id [:db.part/user -4] #db/id [:db.part/user -6] :vote.value/no]
+  [:vote #db/id [:db.part/user -3] #db/id [:db.part/user -7] :vote.value/no]
+  [:vote #db/id [:db.part/user -2] #db/id [:db.part/user -7] :vote.value/ok]]}
