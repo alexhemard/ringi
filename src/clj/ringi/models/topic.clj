@@ -1,52 +1,71 @@
 (ns ringi.models.topic
     (:require [datomic.api  :as d]
               [ringi.query :refer [qe qes find-by]]
-              [ringi.mapper :refer [defmap]]))
+              [ringi.mapper :refer [defmap]]
+              [clojure.string :refer [blank?]]
+              [bouncer.core :as b]
+              [bouncer.validators :as v]))
 
-(defmap user->map [m]
+(defn validate [topic]
+  (b/validate
+   topic
+   :topic/title v/required
+   :choices [[v/every #(not (blank? (:choice/title %)))
+              :message "choices must have a title."]]))
+
+(defn validate-update [topic]
+  (let [not-blank? #(not (blank? %))]
+    (b/validate
+     topic
+     :topic/title       [[not-blank? :message "Title cannot be blank."]]
+     :topic/description [[not-blank? :message "Description cannot be blank."]])))
+
+(defmap user->raw [m]
   [:id   :user/user
    :name :user/name])
 
-(defmap votes->map [m]
+(defmap votes->raw [m]
   [:author {:from :vote/author
-            :fn user->map}
+            :fn user->raw}
    :value  {:from :vote/value
             :fn name}])
 
-(defmap choice->map [m]
+(defmap choice->raw [m]
   [:id     :choice/uid
    :author {:from :choice/author
-            :fn user->map}
+            :fn user->raw}
    :title  :choice/title    
    :votes {:from :votes
-           :fn votes->map}])
+           :fn votes->raw
+           :cardinality :many}])
 
-(defmap topic->map [m]
+(defmap topic->raw [m]
   [:id          :topic/uid
    :title       :topic/title
    :description :topic/description
    :author      {:from :topic/author
-                 :fn user->map}
+                 :fn user->raw}
    :choices     {:from :choices
-                 :fn choice->map
+                 :fn choice->raw
                  :cardinality :many}])
 
-(defmap topic->map [m]
-  [:id          :topic/uid
-   :title       :topic/title
-   :description :topic/description
-   :author      {:from :topic/author
-                 :fn user->map}
-   :choices     {:from        :choices
-                 :fn          choice->map
-                 :cardinality :many}])
+(defmap raw->update [m]
+  [:topic/title       :title
+   :topic/description :description])
+
+(defmap raw->choice [m]
+  [:choice/title :title
+   :choice/description :description])
+
+(defmap raw->topic [m]
+  [:topic/title       :title
+   :topic/description :description
+   :choices {:from       :choices
+             :fn         raw->choice
+             :cardinality :many}])
 
 (defn fetch [conn id]
-  (let [db (d/db conn)]
-    (qe '[:find ?t
-          :in $ ?t
-          :where [?t]]
-        (d/db conn) id)))
+  (find-by (d/db conn) :topic/uid id))
 
 (defn fetch-all [conn]
   (let [db (d/db conn)]
@@ -55,5 +74,27 @@
                        :where [?t :topic/uid]]
                      db))))
 
-(defn create [conn data]
-  @(d/transact conn data))
+(defn fetch-all-for-user [conn user]
+  (let [db (d/db conn)]
+    (mapv first (qes '[:find ?t
+                       :in $ ?u
+                       :where [?t :topic/author ?u]]
+                     db user))))
+
+(defn create [conn user topic]
+  (let [[errors topic] (validate topic)]
+    (if-not errors
+      (let [eid (d/tempid :db.part/user)
+            topic (assoc topic :db/id eid)
+            {:keys [db-after tempids]} @(d/transact conn [[:topic/create user topic]])]
+        (d/entity db-after (d/resolve-tempid db-after tempids eid)))
+      {:errors errors})))
+
+
+(defn update [conn user id partial]
+  (let [[errors topic] (validate-update partial)]
+    (if-not errors
+      (let [topic (assoc topic :db/id [:topic/uid id])
+            {:keys [db-after tempids]} @(d/transact conn [topic])]
+        (d/entity db-after [:topic/uid id]))
+      {:errors errors})))

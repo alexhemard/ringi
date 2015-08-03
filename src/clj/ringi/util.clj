@@ -4,6 +4,7 @@
              [cheshire.core          :as json]
              [ringi.uuid             :refer [b64->uuid
                                              uuid->b64]]
+             [clojure.walk           :refer [keywordize-keys prewalk]]
              [slingshot.slingshot    :refer [try+ throw+]])
     (:import (java.util UUID)))
 
@@ -45,14 +46,14 @@
    (System/currentTimeMillis)))
 
 (defn jazz-up-json [data]
-  (clojure.walk/prewalk
+  (prewalk
    (fn [x]
      (if (uuid? x) (uuid->b64 x) x)) data))
 
 (defn json-response [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"}
-   :body (json/generate-string (jazz-up-json data) {:pretty true})})
+   :body (json/generate-string data {:pretty true})})
 
 (defn unauthorized-response []
   {:status 401})

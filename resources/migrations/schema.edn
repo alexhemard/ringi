@@ -43,7 +43,7 @@
      :db/unique :db.unique/identity
      :db.install/_attribute :db.part/db}    
     {:db/id #db/id[:db.part/db]
-     :db/ident :comment/body
+     :db/ident :comment/content
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
@@ -116,6 +116,13 @@
      :db/index true
      :db.install/_attribute :db.part/db}
     {:db/id #db/id[:db.part/db]
+     :db/ident :choice/description
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/fulltext true
+     :db/index true
+     :db.install/_attribute :db.part/db}
+    {:db/id #db/id[:db.part/db]
      :db/ident :choice/author
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
@@ -164,6 +171,39 @@
                               :user/email    email
                               :user/password password}])}}
     
+    {:db/id #db/id [:db.part/user]
+     :db/ident      :topic/create
+     :db/fn  #db/fn{:lang :clojure
+                    :params [db user topic]
+                    :code (let [topic (-> topic
+                                          (assoc :topic/uid (d/squuid))
+                                          (assoc :topic/author user)
+                                          (assoc :choices (map #(-> %
+                                                                    (assoc :choice/author user)
+                                                                    (assoc :choice/uid (d/squuid)))
+                                                               (:choices topic))))]
+                            [topic])}}
+
+    {:db/id #db/id [:db.part/user]
+     :db/ident      :choice/create
+     :db/fn  #db/fn{:lang :clojure
+                    :params [db user topic-id choice]
+                    :code (let [choice (-> choice
+                                           (assoc :_choices topic-id)
+                                           (assoc :choice/uid (d/squuid))
+                                           (assoc :choice/author user))]
+                            [choice])}}    
+
+    {:db/id #db/id [:db.part/user]
+     :db/ident      :comment/create
+     :db/fn  #db/fn{:lang :clojure
+                    :params [db user thing comment]
+                    :code (let [comment (-> comment
+                                            (assoc :_comments      thing)
+                                            (assoc :comment/uid   (d/squuid))
+                                            (assoc :comment/author user))]
+                            [comment])}}
+        
     {:db/id #db/id [:db.part/user]
      :db/ident      :vote
      :db/doc        "vote on a thing"

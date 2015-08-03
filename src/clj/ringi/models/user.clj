@@ -17,11 +17,11 @@
 
 (defn find-or-create-by-twitter-oauth [conn oauth])
 
-(defn create [conn {:keys [username email password] :as params}]
-  (let [user-id (d/tempid :db.part/user)
-        {:keys [tempids db-after]} @(d/transact
-                                     conn
-                                     [[:user/create (d/tempid :db.part/user) username email password]])
+(defn create [conn username email password]
+  (let [user-id  (d/tempid :db.part/user)
+        password (p/encrypt password)
+        user-tx  [:user/create (d/tempid :db.part/user) username email password]
+        {:keys [tempids db-after]} @(d/transact conn [user-tx])
         user  (d/resolve-tempid db-after tempids user-id)]
     (d/entity db-after user)))
 

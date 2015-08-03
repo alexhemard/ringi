@@ -10,7 +10,6 @@
 
                  ;; CLJ
 
-                 [cheshire "5.4.0"]
                  [clj-http "2.0.0"]
                  [clj-oauth "1.5.2"]
                  [commons-codec "1.10"]
@@ -19,10 +18,11 @@
                  [crypto-password "0.1.3"]
                  [com.datomic/datomic-pro "0.9.5201" :exclusions [joda-time]]
                  [ring "1.4.0"]
+                 [ring/ring-json "0.4.0"]
                  [aleph "0.4.0"]
                  [hiccup "1.0.5"]
                  [slingshot "0.12.2"]
-                 [jkkramer/verily "0.6.0"]
+                 [bouncer "0.3.3"]
 
                  ;; CLJS
 
@@ -38,7 +38,8 @@
   :profiles {:test {:source-paths ["test"]}
              :dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.10"]
-                                  [org.clojure/java.classpath "0.2.2"]]}}
+                                  [org.clojure/java.classpath "0.2.2"]
+                                  [kerodon "0.6.1"]]}}
 
   :plugins [[lein-cljsbuild "1.0.6"]
             [lein-ring "0.9.6"]

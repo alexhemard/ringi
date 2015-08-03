@@ -9,6 +9,6 @@
   (let [conn   (get-in *system* [:datomic :conn])
         topicf (get-in fixtures [:topics 0])
         uid    (:topic/uid topicf)
-        topic  (topic/fetch conn [:topic/uid uid])]
+        topic  (topic/fetch conn uid)]
     (is (= (:topic/title topicf)       (:topic/title topic)))
     (is (= (:topic/description topicf) (:topic/description topic)))))

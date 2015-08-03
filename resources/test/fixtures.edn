@@ -24,7 +24,17 @@
    :topic/uid #uuid "55bb8e69-03fe-4396-a556-d51c77ca50b0"
    :topic/title "whats good fam"
    :topic/description "swaggo"
-   :topic/author #db/id [:db.part/user -1]}]
+   :topic/author #db/id [:db.part/user -1]}
+  {:db/id  #db/id [:db.part/user -8]
+   :topic/uid #uuid "55bfbf34-88e3-4924-b4db-8e1fe5636d0d"
+   :topic/title "test2"
+   :topic/description "jah"
+   :topic/author #db/id [:db.part/user -1]}
+  {:db/id  #db/id [:db.part/user -9]
+   :topic/uid #uuid "55bfbf42-db24-4f34-aeb1-4f8dce9a1ee7"
+   :topic/title "test3"
+   :topic/description "pizz"
+   :topic/author #db/id [:db.part/user -3]}]
  :choices
  [{:db/id #db/id [:db.part/user -6]
    :choice/uid #uuid "55bb8e69-03fe-4396-a556-d51c77ca50b0"
@@ -39,7 +49,7 @@
  :votes
  [[:vote #db/id [:db.part/user -1] #db/id [:db.part/user -6] :vote.value/yes]
   [:vote #db/id [:db.part/user -2] #db/id [:db.part/user -6] :vote.value/yes]
-  [:vote #db/id [:db.part/user -3] #db/id [:db.part/user -6] :vote.value/ok]
-  [:vote #db/id [:db.part/user -4] #db/id [:db.part/user -6] :vote.value/no]
+  [:vote #db/id [:db.part/user -4] #db/id [:db.part/user -6] :vote.value/ok]
+  [:vote #db/id [:db.part/user -1] #db/id [:db.part/user -7] :vote.value/yes]
   [:vote #db/id [:db.part/user -3] #db/id [:db.part/user -7] :vote.value/no]
   [:vote #db/id [:db.part/user -2] #db/id [:db.part/user -7] :vote.value/ok]]}

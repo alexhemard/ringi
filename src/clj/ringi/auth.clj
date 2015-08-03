@@ -12,9 +12,9 @@
 (defn wrap-user [f ctx]
   (fn [req]
     (let [conn (get-in ctx [:datomic :conn])
-          session (:session req)
-          user-id (parse-uuid (:user_id session))
+          user-id (get-in req [:session :user_id])
+          user-id (parse-uuid user-id)
           user    (when user-id (user/fetch conn user-id))]
       (if user
-        (f (assoc-in req [:session :user] user))
-        (f (assoc-in req [:session :user] user-id))))))
+        (f (assoc req :user user))
+        (f req)))))

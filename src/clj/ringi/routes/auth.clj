@@ -30,10 +30,10 @@
 (defn register [ctx params session]
   (let [conn (get-in ctx [:datomic :conn])
         {:keys [username email password]} params
-        user (d/entity (d/db conn) @(user/create conn params))]
+        user (d/entity (d/db conn) @(user/create conn username email password))]
     (when user
       (-> (json-response user)
-          (assoc :session (assoc :user_id session (:user/gid user)))))))
+          (assoc :session (assoc :user_id session (:user/uid user)))))))
 
 (defn twitter-login [ctx params session callback]
   (let [request-token (oauth/request-token consumer callback)
@@ -57,7 +57,7 @@
     (if user
       (-> (redirect "/")
           (assoc :session (-> session
-                              (assoc  :user_id (:user/gid user))
+                              (assoc  :user_id (:user/uid user))
                               (dissoc :twitter_oauth))))
            (redirect "/login"))))
 

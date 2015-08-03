@@ -4,6 +4,7 @@
             [compojure.route                :as    route]
             [compojure.core                 :refer [GET POST PUT PATCH routes context]]
             [ring.util.response             :as    resp]
+            [ring.middleware.json           :refer [wrap-json-body wrap-json-response]]
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.session        :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
@@ -40,7 +41,9 @@
       (wrap-user ctx)
       (wrap-session {:cookie-name "ringi" :store (cookie-store)})
       wrap-slingshot
-      handler/api))
+      (wrap-json-body {:keywords? true})
+      handler/api
+      wrap-json-response))
 
 (defrecord App [datomic handler]
   component/Lifecycle

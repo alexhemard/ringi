@@ -1,19 +1,23 @@
 (ns ringi.test.helper
-  (:require [clojure.java.io :as io]
-            [ringi.system  :refer [system]]
-            [ringi.config  :refer [config]]
-            [ringi.datomic :refer [create-datomic]]
-            [ringi.app     :refer [create-app]]
-            [datomic.api   :as     d]
-            [clojure.test  :refer :all]
+  (:require [clojure.java.io            :as     io]
+            [ringi.system               :refer [system]]
+            [ringi.config               :refer [config]]
+            [ringi.datomic              :refer [create-datomic]]
+            [ringi.app                  :refer [create-app]]
+            [datomic.api                :as     d]
+            [crypto.password.pbkdf2     :as     p]
+            [clojure.test               :refer :all]
             [com.stuartsierra.component :as component]))
 
 (def ^{:dynamic true} *system* nil)
 
 (def fixtures
-  (-> (io/resource "test/fixtures.edn")
-      slurp
-      read-string))
+  (let [fixtures (-> (io/resource "test/fixtures.edn")
+                     slurp
+                     read-string)]
+    (assoc fixtures :users
+           (mapv #(assoc % :user/password (p/encrypt "password"))
+                (:users fixtures)))))
 
 (def test-config
   {:env "test"
