@@ -4,6 +4,7 @@
              [cheshire.core          :as json]
              [ringi.uuid             :refer [b64->uuid
                                              uuid->b64]]
+             [clojure.string :refer [blank?]]
              [clojure.walk           :refer [keywordize-keys prewalk]]
              [slingshot.slingshot    :refer [try+ throw+]])
     (:import (java.util UUID)))
@@ -68,3 +69,8 @@
       (f req)
       (catch [:type ::unauthorized] _
         (unauthorized-response)))))
+
+(defn not-blank? [val]
+  (if val
+    (not (blank? val))
+    true))

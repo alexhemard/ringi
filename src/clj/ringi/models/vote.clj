@@ -8,5 +8,6 @@
    "ok"  :vote.value/ok})
 
 (defn vote [conn user choice value]
-  (if-let [val (get vote-values-m value)]
-    @(d/transact conn [[:vote user choice value]])))
+  (if-let [value (get vote-values-m value)]
+    @(d/transact conn [[:vote user choice value]])
+    {:errors [{ :value "Vote value must be 'yes', 'no', or 'ok'."}]}))

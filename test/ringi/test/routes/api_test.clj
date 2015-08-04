@@ -61,8 +61,7 @@
         (has (status? 200)))))
 
 (deftest post-topic-update
-  (let [partial    {:title       "jazz"
-                    :description "swag"}
+  (let [partial    {:title       "jazz"}
         conn       (get-in *system* [:datomic :conn])
         app        (get-in *system* [:app :handler])
         topic (first (topic/fetch-all conn))
@@ -79,8 +78,7 @@
         ((fn [state]
            (let [body (get-in state [:response :body])
                  topic (json/parse-string body true)]
-             (is (= "jazz" (:title topic)))
-             (is (= "swag" (:description topic)))))))))
+             (is (= "jazz" (:title topic)))))))))
 
 (deftest post-choice
   (let [body  {:title       "new-choice"
@@ -100,8 +98,7 @@
         (has (status? 200)))))
 
 (deftest post-choice-update
-  (let [partial {:title       "updated-choice"
-                 :description "whatsup"}
+  (let [partial {:title       "updated-choice"}
         app   (get-in *system* [:app :handler])
         conn  (get-in *system* [:datomic :conn])
         choice (first (choice/fetch-all conn))
@@ -113,14 +110,14 @@
         (request (str "/v1/choices/" cid)
                  :request-method :post
                  :body (json/generate-string partial))
-        (has (status? 200))
+        (has (status? 204))
         (request (str "/v1/topics/" tid)
                  :request-method :get)
         ((fn [state]
            (let [body (get-in state [:response :body])
-                 choice (json/parse-string body true)]
-             (is (= "updated-choice" (:title choice)))
-             (is (= "whatsup"        (:description choice)))))))))
+                 topic (json/parse-string body true)
+                 choice (first (filter #(= (str cid) (:id %)) (:choices topic)))]
+             (is (= "updated-choice" (:title choice)))))))))
 
 (deftest post-vote
   (let [app     (get-in *system* [:app :handler])
@@ -133,10 +130,10 @@
         new-val (if (= "yes" (name (:vote/value vote))) "no" "yes")]
     (-> (session app)
         (login "alex" "password")
-        (request (str "/v1/choices/" cid)
+        (request (str "/v1/choices/" cid "/votes")
                  :request-method :post
                  :params {:value new-val})
-        (has (status? 200))
+        (has (status? 204))
         (request (str "/v1/topics/" tid)
                  :request-method :get)
         ((fn [state]
@@ -160,7 +157,6 @@
                   comments (:data (json/parse-string body true))]
               (is (= 0 (count comments)))))))))
 
-
 (deftest post-choice-comment
   (let [body   {:content "I love pizza"}
         app    (get-in *system* [:app :handler])
@@ -168,6 +164,7 @@
         cid    (:choice/uid choice)]
     (-> (session app)
         (login "alex" "password")
+        (content-type "application/json")
         (request (str "/v1/choices/" cid "/comments")
                  :request-method :post
                  :body (json/generate-string body))

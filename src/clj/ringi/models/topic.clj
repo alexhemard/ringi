@@ -2,6 +2,7 @@
     (:require [datomic.api  :as d]
               [ringi.query :refer [qe qes find-by]]
               [ringi.mapper :refer [defmap]]
+              [ringi.util   :refer [not-blank?]]
               [clojure.string :refer [blank?]]
               [bouncer.core :as b]
               [bouncer.validators :as v]))
@@ -9,16 +10,16 @@
 (defn validate [topic]
   (b/validate
    topic
-   :topic/title v/required
-   :choices [[v/every #(not (blank? (:choice/title %)))
+   :topic/title       [v/required [not-blank? :message "Title cannot be blank."]]
+   :topic/description [[not-blank? :message "Description cannot be blank."]]
+   :choices [[v/every #(not-blank? (:choice/title %))
               :message "choices must have a title."]]))
 
 (defn validate-update [topic]
-  (let [not-blank? #(not (blank? %))]
-    (b/validate
-     topic
-     :topic/title       [[not-blank? :message "Title cannot be blank."]]
-     :topic/description [[not-blank? :message "Description cannot be blank."]])))
+  (b/validate
+   topic
+   :topic/title       [[not-blank? :message "Title cannot be blank."]]
+   :topic/description [[not-blank? :message "Description cannot be blank."]]))
 
 (defmap user->raw [m]
   [:id   :user/user
@@ -89,7 +90,6 @@
             {:keys [db-after tempids]} @(d/transact conn [[:topic/create user topic]])]
         (d/entity db-after (d/resolve-tempid db-after tempids eid)))
       {:errors errors})))
-
 
 (defn update [conn user id partial]
   (let [[errors topic] (validate-update partial)]
