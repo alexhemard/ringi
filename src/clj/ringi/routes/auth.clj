@@ -29,11 +29,13 @@
 
 (defn register [ctx params session]
   (let [conn (get-in ctx [:datomic :conn])
-        {:keys [username email password]} params
-        user (d/entity (d/db conn) @(user/create conn username email password))]
-    (when user
-      (-> (json-response user)
-          (assoc :session (assoc :user_id session (:user/uid user)))))))
+        {:keys [username email password]} params]    
+    (try
+      (let [user (user/create conn username email password)]
+        (-> (redirect "/")
+            (assoc :session (assoc session :user_id (:user/uid user)))))
+      (catch Exception e (-> (response "username or email already registered")
+                             (status 409))))))
 
 (defn twitter-login [ctx params session callback]
   (let [request-token (oauth/request-token consumer callback)

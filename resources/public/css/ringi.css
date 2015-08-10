@@ -162,6 +162,39 @@ ul {
   clear: left;
 }
 
+.topics-form {
+  width: 400px;
+}
+
+h2, h3 {
+  margin-bottom: 16px;
+}
+
+.topics-form label{
+  display: block;
+  margin-bottom: 8px;
+}
+
+.topics-form input[type=text]{
+  border: 1px solid lightgrey;
+  display: block;
+  margin-bottom: 24px;
+  padding: 8px;
+  width: 100%;
+  font-size: 16px;
+}
+
+.topics-form textarea {
+  border: 1px solid lightgrey;
+  margin-bottom: 24px;
+  padding: 8px;
+  display: block;
+  resize: none;
+  width: 100%;
+  font-size: 16px;
+}
+
+
 .menu {
   color: black;
   background-color: lightgrey;

@@ -1,26 +1,11 @@
-(ns ringi.query
-  (:require [ringi.utils :refer [parse-uuid]]))
+(ns ringi.query)
 
 (def topics
-  '[:find ?e (pull ?e [:topic/id
-                       :topic/title
-                       :topic/timestamp
-                       {:topic/author
-                        [:user/id
-                         :user/name
-                         :user/avatar
-                         :user/me]}])
+  '[:find ?e 
     :where [?e :topic/title]])
 
 (def topics-by-author
-  '[:find ?e (pull ?e [:topic/id
-                       :topic/title
-                       :topic/timestamp
-                       {:topic/author
-                        [:user/id
-                         :user/name
-                         :user/avatar
-                         :user/me]}])
+  '[:find ?e
     :in $ ?u
     :where [?e :topic/author ?u]])
 
@@ -28,6 +13,12 @@
   '[:find ?e
     :in $ ?id
     :where [?e :topic/id ?id]])
+
+(def vote-by-author
+  '[:find ?v
+    :in $ ?c ?u
+    :where [?c :votes ?v]
+           [?v :vote/author ?u]])
 
 (def user-p
   [:user/id

@@ -1,5 +1,5 @@
 (ns ringi.core
-    (:require-macros [cljs.core.async.macros :refer [go alt!]])
+    (:require-macros [cljs.core.async.macros :refer []])
     (:require [goog.events :as events]
               [goog.dom :as gdom]
               [goog.object :as gobj]
@@ -9,39 +9,34 @@
               [reagent.core :as r :refer [atom]]
               [secretary.core :as secretary :refer-macros [defroute]]
               [goog.history.EventType :as EventType]
-              [ringi.component :as c]
-              [ringi.db :refer [init-db!]]
-              [ringi.utils :refer [guid]])
+              [ringi.session :refer [puts! current-user] :as session]
+              [ringi.service :refer [call-server start-service!]]
+              [ringi.component :as c])
     (:import [goog.history Html5History]
              [goog Uri]))
-
-(def app-state (r/atom nil))
-
-(defn put! [k v]
-  (swap! app-state assoc k v))
 
 ;; Routes
 
 (defn current-page-render []
-   (:current-page @app-state))
+  (:current-page @session/state))
 
 (defn current-page []
   (r/create-class {:reagent-render (fn [] [c/page (current-page-render)])}))
 
 (defroute "/" []
-  (put! :current-page [c/topics]))
+  (puts! :current-page [c/topics]))
 
 (defroute "/register" []
-  (put! :current-page [c/register]))
+  (puts! :current-page [c/register]))
 
 (defroute "/login" []
-  (put! :current-page [c/login]))
-
-(defroute "/t/:id" [id]
-  (put! :current-page [c/topic-show id]))
+  (puts! :current-page [c/login]))
 
 (defroute "/t/new" []
-  (put! :current-page [c/topics-new]))
+  (puts! :current-page [c/topics-new]))
+
+(defroute "/t/:id" [id]
+  (puts! :current-page [c/topic-show id]))
 
 ;; history
 
@@ -67,14 +62,14 @@
            (let [path (.getPath (.parse Uri (.-href target)))]
              (when (secretary/locate-route path)
                (.preventDefault e)
-               (.log js/console path)
                (.setToken history path)))))))
     
     (secretary/dispatch! (-> js/window .-location .-pathname))))
 
 (defn main []
+  (session/init!)
   (init-history!)
-  (init-db!)
+  (start-service!)
   (r/render-component [current-page] (gdom/getElement "root")))
 
 (main)

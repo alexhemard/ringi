@@ -15,10 +15,14 @@
             [ringi.auth                     :refer [wrap-user]]
             [ringi.util                     :refer [wrap-slingshot]]))
 
-(defn index []
+(defn index [user]
   (html5
     [:head {:lang "en"}
      [:title "Ringi"]
+     (when user
+       (for [key [:user/name :user/uid]
+             :let [value (get user key)]]
+         [:meta {(str "user_" (name key)) value}]))
      (include-css "/css/ringi.css")
      (include-css "http://fonts.googleapis.com/css?family=Merriweather")]
     [:body
@@ -32,7 +36,7 @@
    (context "/v1" [] (api-routes ctx))
    (auth-routes ctx)
    (route/resources "/")
-   (GET "*/*" [] (index)) 
+   (GET "*/*" [:as {user :user}] (index user)) 
    (route/not-found "404 Not Found")))  
 
 (defn app

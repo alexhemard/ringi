@@ -28,11 +28,11 @@
 
                  [org.clojure/clojurescript "0.0-3308"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+                 [com.cognitect/transit-cljs "0.8.220"]
                  [datascript "0.11.6"]
                  [cljs-http "0.1.35"]
                  [secretary "1.2.1"]
-                 [reagent "0.5.0" :exclusions [cljsjs/react]]
-                 [cljsjs/react-with-addons "0.13.3-0"]]
+                 [reagent "0.5.0"]]
 
   :repositories {"my.datomic.com" {:url "~/.m2"}}
   :profiles {:test {:source-paths ["test"]}

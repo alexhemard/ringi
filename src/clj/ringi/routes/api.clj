@@ -33,7 +33,7 @@
           {:keys [errors] :as topic} (topic/create conn (:db/id user) body)]
       (if-not errors
         (-> (created (str "/v1/topics/" (:topic/uid topic))))
-        (-> (response errors)
+        (-> (response {:errors errors})
             (status 422))))
     (unauthorized!)))
 
@@ -45,7 +45,7 @@
     (if-not errors
       (-> (response nil)
           (status 204))
-      (-> (response errors)
+      (-> (response {:errors errors})
           (status 422)))))
 
 (defn delete-topic [ctx id]
@@ -61,7 +61,7 @@
           {:keys [errors] :as choice} (choice/create conn (:db/id user) topic-id body)]
       (if-not errors
         (-> (created (str "/v1/choices/" (:choice/uid choice))))
-        (-> (response errors)
+        (-> (response {:errors errors})
             (status 422))))
     (unauthorized!)))
 
@@ -75,7 +75,7 @@
       (if-not errors
         (-> (response nil)
             (status 204))
-        (-> (response errors)
+        (-> (response {:errors errors})
             (status 422))))
     (unauthorized!)))    
 
@@ -96,7 +96,7 @@
       (if-not errors
         (-> (response nil)
             (status 201))
-        (-> (response errors)
+        (-> (response {:errors errors})
             (status 422))))
     (unauthorized!)))
 
@@ -113,7 +113,7 @@
       (if-not errors 
         (-> (response nil)
             (status 204))
-        (-> (response errors)
+        (-> (response {:errors errors})
             (status 422))))
     (unauthorized!)))
 

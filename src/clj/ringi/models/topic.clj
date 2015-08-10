@@ -22,11 +22,12 @@
    :topic/description [[not-blank? :message "Description cannot be blank."]]))
 
 (defmap user->raw [m]
-  [:id   :user/user
+  [:id   :user/uid
    :name :user/name])
 
 (defmap votes->raw [m]
-  [:author {:from :vote/author
+  [:id      :db/id
+   :author {:from :vote/author
             :fn user->raw}
    :value  {:from :vote/value
             :fn name}])
