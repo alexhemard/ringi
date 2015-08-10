@@ -4,39 +4,16 @@
               [goog.dom :as gdom]
               [goog.object :as gobj]
               [goog.history.EventType :as EventType]
-              [cljs.core.async :as async]
-              [cljs-http.client :as http]
-              [reagent.core :as r :refer [atom]]
+              [om.core :as om :include-macros true]
               [secretary.core :as secretary :refer-macros [defroute]]
               [goog.history.EventType :as EventType]
-              [ringi.session :refer [puts! current-user] :as session]
+              [ringi.session  :as session]
               [ringi.service :refer [call-server start-service!]]
               [ringi.component :as c])
     (:import [goog.history Html5History]
              [goog Uri]))
 
-;; Routes
-
-(defn current-page-render []
-  (:current-page @session/state))
-
-(defn current-page []
-  (r/create-class {:reagent-render (fn [] [c/page (current-page-render)])}))
-
-(defroute "/" []
-  (puts! :current-page [c/topics]))
-
-(defroute "/register" []
-  (puts! :current-page [c/register]))
-
-(defroute "/login" []
-  (puts! :current-page [c/login]))
-
-(defroute "/t/new" []
-  (puts! :current-page [c/topics-new]))
-
-(defroute "/t/:id" [id]
-  (puts! :current-page [c/topic-show id]))
+(def app-state (atom nil))
 
 ;; history
 
@@ -66,11 +43,30 @@
     
     (secretary/dispatch! (-> js/window .-location .-pathname))))
 
+(def target (.getElementById js/document "root"))
+
+;; Routes
+
+(defroute "/" []
+  (om/root c/index app-state {:target target}))
+
+(defroute "/register" []
+  (om/root c/index app-state {:target target}))
+
+(defroute "/login" []
+  (om/root c/index app-state {:target target}))
+
+(defroute "/t/new" []
+  (om/root c/index app-state {:target target}))
+
+(defroute "/t/:id" [id]
+  (swap! app-state assoc :topic-id id)
+  (om/root c/index app-state {:target target}))
+
 (defn main []
-  (session/init!)
+  (session/init! app-state)
   (init-history!)
-  (start-service!)
-  (r/render-component [current-page] (gdom/getElement "root")))
+  (start-service!))
 
 (main)
 

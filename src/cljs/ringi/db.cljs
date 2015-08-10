@@ -1,6 +1,5 @@
 (ns ringi.db
   (:require  [cljs.core.async :refer [chan pub sub <! put!] :as async]
-             [reagent.core :as r :refer [atom]]
              [datascript :as d])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
