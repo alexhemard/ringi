@@ -1,6 +1,7 @@
 (ns ringi.db
   (:require  [cljs.core.async :refer [chan pub sub <! put!] :as async]
-             [datascript :as d])
+             [datascript :as d]
+             [om.core :as om])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -18,18 +19,17 @@
        (map #(d/entity db (first %)))))
 
 (defn bind
-  [conn state q & q-args]
+  [conn state key q & q-args]
   (let [k (d/squuid)]
-    (reset! state (apply qes q @conn q-args))
+    (om/update! state key (apply qes q @conn q-args))
     (d/listen! conn k (fn [tx-report]
-                        (.log js/console (:vote/value (first (apply qes q (:db-after tx-report) q-args))))
-                        (reset! state (apply qes q (:db-after tx-report) q-args))))
-    (set! (.-__key state) k)
+                        (om/update! state key (apply qes q (:db-after tx-report) q-args))))
+
     state))
 
 (defn unbind
-  [conn state]
-  (d/unlisten! conn (.-__key state)))
+  [conn state key]
+  (d/unlisten! conn key))
 
 (def schema
   {;; users
@@ -78,3 +78,19 @@
 
 (def conn
   (d/create-conn schema))
+
+(comment
+  (d/transact! conn [{:db/id -1
+                      :topic/title "whatever"
+                      :topic/id "pizza"
+                      :topic/author {:user/name "alex"
+                                     :user/id "55ce4c96-aa64-4cf3-820d-f38f98b7663a" }}
+                     {:db/id -2
+                      :topic/id "jazz"
+                      :topic/title "swag"
+                      :topic/author {:user/name "alex"
+                                     :user/id "55ce4c96-aa64-4cf3-820d-f38f98b7663a"}}]))
+
+(defn persist [tx state]
+  (let [conn (:conn @state)]
+    (d/transact! conn tx)))

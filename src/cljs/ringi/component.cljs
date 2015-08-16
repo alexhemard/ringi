@@ -4,81 +4,158 @@
             [datascript   :as d]
             [clojure.string :refer [blank?]]
             [ringi.db     :as db :refer [unbind bind conn]]
-            [ringi.service :as s]
             [ringi.query  :as q]))
 
 (defn index [data owner]
   (reify
     om/IRender
     (render [this]
-      (dom/a #js {:href "/pizza"} "pizza"))))
+      (dom/a #js {:href "/"} "please register/login"))))
 
-(comment
-  (defn login-form []
-    [:form {:class "login" :method :POST :action "/login" }
-     [:span {:class "login-title"} "Log in"]
-     [:label {:for "username"} "Username"]
-     [:input {:type :text :name :username :id :username :placeholder "username"} ]
-     [:label {:for "password"} "Password"]
-     [:input {:type :password :name :password :id :password :placeholder "password123"}]
-     [:input {:class "login-button" :type :submit :value "Submit"}]]))
+(defn login-form [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/form #js {:className "login" :method "POST" :action "/login"}
+        (dom/span  #js {:className "login-title"} "Log in")
+        (dom/label #js {:htmlFor "username"} "Username")
+        (dom/input #js {:type "text" :name "username" :placeholder "username"})
+        (dom/label #js {:htmlFor "password"} "Password")
+        (dom/input #js {:type "password" :name "password" :placeholder "password123"})
+        (dom/input #js {:className "login-button" :type "submit" :value "Submit"})))))
+
+(defn registration-form [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/form #js {:className "register" :method "POST" :action "/register"}
+        (dom/span  #js {:className "register-title"} "Sign Up")
+        (dom/label #js {:htmlFor "username"} "Username")
+        (dom/input #js {:type "text" :name "username" :placeholder "username"})
+        (dom/label #js {:htmlFor "email"} "Email")
+        (dom/input #js {:type "text" :name "email" :placeholder "example@coolguys.pro"})        
+        (dom/label #js {:htmlFor "password"} "Password")
+        (dom/input #js {:type "password" :name "password" :placeholder "password123"})
+        (dom/input #js {:className "login-button" :type "submit" :value "Submit"})))))
+
+(defn menu-list [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/ul #js {:className "menu-list"}
+        (dom/li #js {:className "menu-list-item"}
+          (dom/a #js {:href "/register"} "sign up"))
+        (dom/li #js {:className "menu-list-item"}
+          (dom/a #js {:href "/login"} "log in"))
+        (dom/li #js {:className "menu-list-item"}
+          (dom/a #js {:href "/t/new"} "+"))))))
+
+(defn menu [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div #js {:className "menu"}
+        (dom/h1 #js {:className "menu-title"}
+          (dom/a #js {:href "/"} "Ringi"))
+        (om/build menu-list app)))))
+
+(defn topic-item [topic owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [{:keys [topic/title
+                    topic/id
+                    topic/author]} topic]
+        (dom/li #js {:className "topics-list-item"}
+          (dom/a #js {:className "topics-title" :href (str "/t/" id)} title)
+          (dom/div #js {:className "topics-author"} (:user/name author)))))))
+
+(defn dashboard [{:keys [topics
+                         conn
+                         current-user] :as app} owner]
+  (reify
+    om/IWillMount
+    (will-mount [this]
+      (let [current-user (:id current-user)]
+        (bind conn app :topics q/topics-by-author [:user/id current-user])))
+    om/IWillUnmount
+    (will-unmount [this]
+      (unbind conn app :topics))
+    om/IRender
+    (render [this]
+      (dom/div nil
+        (dom/h2 nil "My Topics")
+        (apply dom/ul #js {:className "topics-choices"}
+          (om/build-all topic-item topics {:key :db/id}))))))
+
+(defn show-topic [{:keys [topic
+                          conn
+                          params] :as app} owner]
+  (reify
+    om/IWillMount
+    (will-mount [this]
+      (let [{:keys [id]} (:params app)]
+        (bind conn app :topic q/topic-by-id id)))
+    om/IWillUnmount
+    (will-unmount [this]
+      (unbind conn app :topic))
+    om/IRender
+    (render [this]
+      (let [{:keys [topic/title
+                    topic/author
+                    topic/choices]} (first topic)]
+        (dom/a #js {:href "/pizza"} title)))))
+
+(defn register [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (om/build registration-form app))))
 
 
-(comment
-  (defn registration-form []
-    [:form {:class "register" :method :POST :action "/register" }
-     [:span {:class "register-title"} "Sign Up"]
-     [:label {:for "username"} "Username"]
-     [:input {:type :text :name :username :id :username :placeholder "username"} ]
-     [:label {:for "email"} "Email"]
-     [:input {:type :email :name :email :id :email :placeholder "example@coolguys.pro"} ]   
-     [:label {:for "password"} "Password"]
-     [:input {:type :password :name :password :id :password :placeholder "password123"}]
-     [:input {:class "register-button" :type :submit :value "Submit"}]]))
+(defn login [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (om/build login-form app))))
 
-(comment
-  (defn logged-in-menu-list []
-    [:ul {:class "menu-list"}
-     [:li {:class "menu-list-item"} [:a {:href "#"} (str "@" (:name (current-user)))]]
-     [:li {:class "menu-list-item"} [:a {:href "/logout"} "logout"]]
-     [:li {:class "menu-list-item"} [:a {:href "/t/new"} "new"]]]))
 
-(comment
-  (defn menu-list []
-    [:ul {:class "menu-list"}
-     [:li {:class "menu-list-item"} [:a {:href "/register"} "sign up"]]
-     [:li {:class "menu-list-item"} [:a {:href "/login"} "login"]]
-     [:li {:class "menu-list-item"} [:a {:href "/t/new"} "new"]]]))
+(defn new-topic [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/a #js {:href "/pizza"} "new-topic"))))
 
-(comment
-  (defn menu-bar []
-    [:div {:class "menu"}
-     [:h1 {:class "menu-title"} [:a {:href "/"} "Ringi"]]
-     (if (current-user)
-       [logged-in-menu-list]
-       [menu-list])]))
+(defn not-found [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/a #js {:href "/"} "nothing here..."))))
 
-(comment
-  (defn page []
-    (let [this (r/current-component)]
-      [:div {:class "container"}
-       [menu-bar]
-       (into
-        [:div {:class "content"}]
-        (r/children this))])))
+(defn page [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (if-let
+          [comp (case (:current-page app)
+                  :index      (if (:current-user app) dashboard index)
+                  :register    register
+                  :login       login
+                  :new-topic   new-topic
+                  :show-topic  show-topic
+                  :not-found   not-found
+                  nil)]
+        (om/build comp app)
+        (dom/div nil)))))
 
-(comment
-  (defn register []
-    [registration-form])
-
-  (defn login []
-    [login-form])
-
-  (defn home []
-    [:h2 "welcome"])
-
-  (defn vote []
-    [:li]))
+(defn app [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div #js {:className "container"}
+        (om/build menu app)
+        (dom/div #js {:className "content"}
+          (om/build page app))))))
 
 (comment
   (defn vote-data [votes]
@@ -110,10 +187,7 @@
                                       :name     name
                                       :id       name
                                       :type     :radio
-                                      :on-change (fn [e]
-                                                   (s/call-server
-                                                    :vote {:choice-id choice-id
-                                                           :vote value}))
+                                      :on-change (fn [e])
                                       :checked  (= my-vote value)}]
                              [:label {:for name} value]])]))}))))
 
@@ -155,8 +229,7 @@
       (r/create-class
        {:component-will-mount
         (fn []
-          (bind conn topic q/topic-by-id id)
-          (s/call-server :fetch-topic {:topic-id id}))
+          (bind conn topic q/topic-by-id id))
         :component-will-unmount
         (fn []
           (unbind conn topic))
@@ -179,8 +252,7 @@
     (let [topics (atom nil)]
       (r/create-class
        {:component-will-mount
-        (fn [] (when (current-user)
-                 (s/call-server :fetch-topics))
+        (fn [] (when (current-user))
           (bind conn topics q/topics-by-author [:user/id (:id (current-user))]))
         :component-will-unmount
         (fn [] (unbind conn topics))
