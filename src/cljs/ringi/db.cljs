@@ -20,12 +20,11 @@
 
 (defn bind
   [conn state key q & q-args]
-  (let [k (d/squuid)]
-    (om/update! state key (apply qes q @conn q-args))
-    (d/listen! conn k (fn [tx-report]
+  (om/update! state key (apply qes q @conn q-args))
+  (d/listen! conn key (fn [tx-report]
                         (om/update! state key (apply qes q (:db-after tx-report) q-args))))
 
-    state))
+  state)
 
 (defn unbind
   [conn state key]

@@ -33,13 +33,6 @@
 (def api-mult         (mult api-ch))
 (def persistence-mult (mult persistence-ch))
 
-(defn app-state []
-  (atom {:current-user (current-user)
-         :conn         db/conn
-         :comms        {:nav     navigation-ch
-                        :api     api-ch
-                        :persist persistence-ch}}))
-
 ;; history
 
 (def history
@@ -53,7 +46,7 @@
     (fn [e]
       (when (secretary/locate-route (.-token e))
         (secretary/dispatch! (.-token e)))))
-  
+
   (events/listen js/document "click"
     (fn [e]
       (let [target (.-target e)]
@@ -64,6 +57,14 @@
               (.setToken history path)))))))
   
   (secretary/dispatch! (-> js/window .-location .-pathname)))
+
+(defn app-state []
+  (atom {:current-user (current-user)
+         :conn         db/conn
+         :history      history
+         :comms        {:nav     navigation-ch
+                        :api     api-ch
+                        :persist persistence-ch}}))
 
 (defn handle-persist [tx state]
   (db/persist tx state))

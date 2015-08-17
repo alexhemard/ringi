@@ -3,6 +3,7 @@
             [om.dom :as dom :include-macros true]
             [datascript   :as d]
             [clojure.string :refer [blank?]]
+            [ringi.api    :as api]
             [ringi.db     :as db :refer [unbind bind conn]]
             [ringi.query  :as q]))
 
@@ -22,7 +23,7 @@
         (dom/input #js {:type "text" :name "username" :placeholder "username"})
         (dom/label #js {:htmlFor "password"} "Password")
         (dom/input #js {:type "password" :name "password" :placeholder "password123"})
-        (dom/input #js {:className "login-button" :type "submit" :value "Submit"})))))
+        (dom/input #js {:className "button login-button" :type "submit" :value "Log in"})))))
 
 (defn registration-form [app owner]
   (reify
@@ -36,7 +37,7 @@
         (dom/input #js {:type "text" :name "email" :placeholder "example@coolguys.pro"})        
         (dom/label #js {:htmlFor "password"} "Password")
         (dom/input #js {:type "password" :name "password" :placeholder "password123"})
-        (dom/input #js {:className "login-button" :type "submit" :value "Submit"})))))
+        (dom/input #js {:className "button register-button" :type "submit" :value "Register"})))))
 
 (defn menu-list [app owner]
   (reify
@@ -48,7 +49,7 @@
         (dom/li #js {:className "menu-list-item"}
           (dom/a #js {:href "/login"} "log in"))
         (dom/li #js {:className "menu-list-item"}
-          (dom/a #js {:href "/t/new"} "+"))))))
+          (dom/a #js {:href "/t/new"} "new"))))))
 
 (defn menu [app owner]
   (reify
@@ -85,10 +86,57 @@
     (render [this]
       (dom/div nil
         (dom/h2 nil "My Topics")
-        (apply dom/ul #js {:className "topics-choices"}
-          (om/build-all topic-item topics {:key :db/id}))))))
+        (apply dom/ul #js {:className "topics"}
+          (om/build-all topic-item topics {:key :topic/id}))))))
 
-(defn show-topic [{:keys [topic
+(defn handle-change [e owner korks]
+  (om/set-state! owner korks (.. e -target -value)))
+
+(defn add-choice [owner]
+  (om/update-state! owner :choices (fn [s] (conj s {:title ""}))))
+
+(defn create-topic [owner state]
+  (let [api-ch (get-in state [:comms :api])
+        topic (om/get-state owner)
+        topic (update-in topic [:choices] (partial remove #(clojure.string/blank? (:title %))))]
+    
+    (api/call api-ch :create-topic {:data topic})))
+
+(defn topic-form [app owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:title       ""
+       :description ""
+       :choices (vec (repeatedly 3 (fn [] {:title ""})))})
+      om/IRenderState
+      (render-state [this {:keys [title description choices] :as state}]
+        (dom/form #js {:className "topics-form"
+                       :onSubmit  (fn [e]
+                                    (.preventDefault e)
+                                    (create-topic owner app))}
+          (dom/input #js {:type "text"
+                          :name "title"
+                          :value title
+                          :onChange #(handle-change % owner :title)
+                          :placeholder "Title"})
+          (dom/textarea #js {:description "title"
+                             :placeholder "Description..."
+                             :value description
+                             :onChange #(handle-change % owner :description)})
+          (dom/h3 nil "Choices")
+          (apply dom/ul #js {:className "topic-form-choices"}
+            (for [[idx choice] (map-indexed vector choices)]
+              (dom/li #js {:className "choice-form"}
+                (dom/input #js {:type "text"
+                                :placeholder "Add Choice"
+                                :value (:title choice)
+                                :onChange #(handle-change % owner [:choices idx :title])}))))
+          (if (< (count choices) 5)
+            (dom/div #js {:onClick #(add-choice owner)} "add choice"))
+          (dom/input #js {:className "button" :type "submit" :value "Submit"})))))
+
+(defn topic-view [{:keys [topic
                           conn
                           params] :as app} owner]
   (reify
@@ -106,12 +154,17 @@
                     topic/choices]} (first topic)]
         (dom/a #js {:href "/pizza"} title)))))
 
+(defn show-topic [app owner]
+  (reify
+    om/IRender
+    (render [this]
+      (om/build topic-view app))))
+
 (defn register [app owner]
   (reify
     om/IRender
     (render [this]
       (om/build registration-form app))))
-
 
 (defn login [app owner]
   (reify
@@ -119,12 +172,13 @@
     (render [this]
       (om/build login-form app))))
 
-
-(defn new-topic [app owner]
-  (reify
-    om/IRender
-    (render [this]
-      (dom/a #js {:href "/pizza"} "new-topic"))))
+  (defn new-topic [app owner]
+    (reify
+      om/IRender
+      (render [this]
+        (dom/div #js {:className "topics-new"}
+          (dom/h2 #js {:className "topics-title"} "New Topic")
+          (om/build topic-form app)))))
 
 (defn not-found [app owner]
   (reify
@@ -138,7 +192,8 @@
     (render [this]
       (if-let
           [comp (case (:current-page app)
-                  :index      (if (:current-user app) dashboard index)
+                  :index       index
+                  :dashboard   dashboard                  
                   :register    register
                   :login       login
                   :new-topic   new-topic
@@ -270,33 +325,6 @@
           t (update-in t [:choices] (fn [c] (remove #(nil? (:title %)) (vals c))))]
       (s/call-server :create-topic t)
       (reset! topic nil))))
-
-(comment
-  (defn topics-form []
-    (let [topic   (atom nil)
-          choices (atom 3)]
-      (fn []
-        [:form {:class "topics-form"
-                :on-submit (fn [e]
-                             (.preventDefault e)
-                             (create-topic topic))}
-         [:input {:type :text
-                  :name :title
-                  :placeholder "Title"
-                  :on-change #(swap! topic assoc :title (-> % .-target .-value))} ]
-         [:textarea {:name :description
-                     :placeholder "Description..."
-                     :on-change #(swap! topic assoc :description (-> % .-target .-value))}]
-         [:h3 "Choices"]
-         (for [c (range @choices)
-               :let [id (str "choice-" c)]]
-           ^{:key c} [:input {:type :text
-                              :name id
-                              :placeholder "Add choice..."
-                              :on-change #(swap! topic assoc-in [:choices c :title] (-> % .-target .-value))} ])
-         (if (> 5 @choices)
-           [:div {:on-click #(swap! choices inc)} "add choice"])
-         [:input {:type :submit}]]))))
 
 (comment
   (defn topics-new []

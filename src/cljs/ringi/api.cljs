@@ -5,8 +5,8 @@
             [cognitect.transit :as transit]
             [datascript :as d]
             [clojure.string :refer [join]]
-            [ringi.mapper :refer [build-mapping*]]
-            [ringi.db :refer [bind unbind conn]])
+            [secretary.core :as secretary]
+            [ringi.mapper :refer [build-mapping*]])
   (:import [goog.net XhrIo]
            goog.net.EventType
            [goog.events EventType])
@@ -76,16 +76,16 @@
 (def topics-path (str api-root "/topics"))
 
 (defn topic-path [topic-id]
-  (apply join "/" topics-path topic-id))
+  (join "/" [topics-path topic-id]))
 
 (defn choices-path [topic-id]
-  (apply join "/" topics-path "choices"))
+  (join "/" [topics-path "choices"]))
 
 (defn choice-path [choice-id]
-  (apply join "/" api-root "choices" choice-id))
+  (join "/" [api-root "choices" choice-id]))
 
 (defn votes-path [choice-id]
-  (apply join "/" (choice-path choice-id) "votes"))
+  (join "/" [(choice-path choice-id) "votes"]))
 
 (defmulti handle
   (fn [method args state] method))
@@ -96,21 +96,33 @@
     (let [{:keys [comms]} @state
           persist-ch (:persist comms)
           result (GET topics-path)
-          data (get-in (<! result) [:body :data])]
+          data (mapv raw->topic (get-in (<! result) [:body :data]))]
       (if (seq data)
         (>! persist-ch data)))))
+
+(defmethod handle :get-topic
+  [method id state]
+  (go
+    (let [{:keys [comms]} @state
+          persist-ch (:persist comms)
+          result (GET (topic-path id))
+          data (raw->topic (get (<! result) :body))]
+      (if (seq data)
+        (>! persist-ch [data])))))
 
 (defmethod handle :create-topic
   [method args state]
   (go
     (let [{:keys [data]}  args
-          {:keys [comms]} @state
+          {:keys [history comms]} @state
           persist-ch (:persist comms)
-          result (POST topics-path data)
-          data (get-in (<! result) [:body :data])]
-      
-
-      )))
+          nav-ch (:nav comms)          
+          result (<! (POST topics-path data))
+          data (get-in result [:body :data])
+          location (get-in result [:headers "Location"])
+          [_ id] (re-find #"/v1/topics/(\S+)" location)
+          new-topic (str "/t/" id)]
+      (.setToken history new-topic))))
 
 (defmethod handle :create-choice
   [method args state]
@@ -133,18 +145,6 @@
       
 
       )))
-
-(defmethod handle :vote
-  [method args state]
-  (go
-    (let [{:keys [comms]} @state
-          persist-ch (:persist comms)
-          result (POST "/v1/topics" args)
-          data (get-in (<! result) [:body :data])]
-      
-
-      )))
-
 
 (defmethod handle :default
   [method args state])

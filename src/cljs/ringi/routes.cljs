@@ -7,18 +7,18 @@
 (defmulti handle
   (fn [path params state] path))
 
-(defmethod handle :index
+(defmethod handle :dashboard
   [path params state]
   (let [api-ch (get-in @state [:comms :api])]
     (api/call api-ch :get-topics)))
 
 (defmethod handle :show-topic
-  [path params state]
-  (.log js/console "show-topicc"))
+  [path {:keys [id]} state]
+  (let [api-ch (get-in @state [:comms :api])]
+    (api/call api-ch :get-topic id)))
 
 (defmethod handle :default
-  [path params state]
-  (.log js/console "whatever"))
+  [path params state])
 
 (defn navigate
   ([ch path]
@@ -30,7 +30,9 @@
   (let [nav-ch (get-in @state [:comms :nav])]
 
     (defroute "/" []
-      (navigate nav-ch :index))
+      (if (:current-user @state)
+        (navigate nav-ch :dashboard)
+        (navigate nav-ch :index)))
     
     (defroute "/register" []
       (navigate nav-ch :register))
