@@ -148,7 +148,7 @@
 (defmethod handle :default
   [method args state])
 
-(defn call
-  ([ch method] (call ch method {}))
+(defn call!
+  ([ch method] (call! ch method {}))
   ([ch method args]
    (put! ch [method args])))

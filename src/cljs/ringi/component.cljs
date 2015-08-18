@@ -4,7 +4,7 @@
             [datascript   :as d]
             [clojure.string :refer [blank?]]
             [ringi.api    :as api]
-            [ringi.db     :as db :refer [unbind bind conn]]
+            [ringi.db     :as db :refer [unbind bind conn persist!]]
             [ringi.query  :as q]))
 
 (defn index [data owner]
@@ -99,7 +99,7 @@
     om/IWillMount
     (will-mount [this]
       (let [current-user (:id current-user)]
-        (bind conn app :topics q/topics-by-author current-user q/topic-p)))
+        (bind conn app :topics q/topics-by-author [current-user q/topic-p])))
     om/IWillUnmount
     (will-unmount [this]
       (unbind conn app :topics))
@@ -122,7 +122,7 @@
         topic (update-in topic [:description] #(if-not (clojure.string/blank? %) % nil))
         topic (update-in topic [:choices] (partial remove #(clojure.string/blank? (:title %))))]
 
-    (api/call api-ch :create-topic {:data topic})))
+    (api/call! api-ch :create-topic {:data topic})))
 
 (defn topic-form [app owner]
   (reify
@@ -164,10 +164,11 @@
 
         value (.. e -target -value)]
     (if my-vote
-      (om/update! my-vote :vote/value value)
-      (om/transact! choice :votes #(conj % {:vote/value value
-                                            :vote/author {:user/id user}})))
-    (api/call api-ch :vote {:choice choice
+      (persist! persist-ch [{:db/id (:db/id my-vote) :vote/value value}])
+      (persist! persist-ch [{:_votes      (:db/id choice)
+                             :vote/value  value
+                             :vote/author {:user/id user}}]))
+    (api/call! api-ch :vote {:choice choice
                             :value value})))
 
 (defn vote-form [app owner]
@@ -221,7 +222,7 @@
     om/IWillMount
     (will-mount [this]
       (let [{:keys [id]} (:params app)]
-        (bind conn app :topic q/topic-by-id id q/topic-p)))
+        (bind conn app :topic q/topic-by-id [id q/topic-p])))
     om/IWillUnmount
     (will-unmount [this]
       (unbind conn app :topic))

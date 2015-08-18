@@ -26,7 +26,8 @@
    :user/name])
 
 (def vote-p
-  [:vote/id
+  [:db/id
+   :vote/id
    :vote/value
    {:vote/author user-p}])
 

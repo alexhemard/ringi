@@ -67,7 +67,7 @@
                         :persist persistence-ch}}))
 
 (defn handle-persist [tx state]
-  (db/persist tx state))
+  (db/handle tx state))
 
 (defn handle-api [method args state]
   (api/handle method args state))
@@ -91,7 +91,7 @@
       (alt!
         api-tap     ([[method args]] (handle-api method args state))        
         nav-tap     ([[path params]] (handle-nav path params state))
-        persist-tap ([tx] (db/persist tx state)))
+        persist-tap ([tx]            (handle-persist tx state)))
         (recur))
     
     (om/root app state {:target (app-target)

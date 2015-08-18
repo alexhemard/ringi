@@ -6,12 +6,14 @@
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn bind
-  [conn state key q & q-args]
-  (om/update! state key (apply d/q q @conn q-args))
-  (d/listen! conn key (fn [tx-report]
-                        (om/update! state key (apply d/q q (:db-after tx-report) q-args))))
-
-  state)
+  ([conn state key q qargs]
+   (bind conn state key q qargs {}))
+  ([conn state key q qargs opts]
+   (let [data-fn (get :fn opts identity)]
+     (om/update! state key (data-fn (apply d/q q @conn qargs)))
+     (d/listen! conn key (fn [tx-report]
+                           (om/update! state key (data-fn (apply d/q q (:db-after tx-report) qargs))))))
+   state))
 
 (defn unbind
   [conn state key]
@@ -66,6 +68,9 @@
 (def conn
   (d/create-conn schema))
 
-(defn persist [tx state]
+(defn handle [tx state]
   (let [conn (:conn @state)]
     (d/transact! conn tx)))
+
+(defn persist! [ch tx]
+  (put! ch tx))
