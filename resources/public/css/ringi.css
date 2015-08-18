@@ -48,7 +48,6 @@ ul {
   
 }
 
-
 .topics-list-item {
   font-size: 24px;
   margin: 20px;
@@ -73,8 +72,8 @@ ul {
   font-weight: bold;
 }
 
-.choice {
-  padding: 10px;
+.topic-author {
+  margin-bottom: 20px;
 }
 
 .choice-title {
@@ -88,11 +87,10 @@ ul {
   display: inline-block;
   height: 100%;
   padding: 20px;
-  padding-left: 0;
 }
 
 .vote-form div {
-  padding: 0.4em;
+  padding: 6px;
   text-transform: capitalize;
 }
 
@@ -107,11 +105,12 @@ ul {
 
 .choice-container {
   display: inline-block;
+  position: absolute;
+  margin: 24px 10px;
 }
 
 .votes {
   overflow: hidden;
-  padding: 10px;
 }
 
 .comment {
@@ -200,7 +199,7 @@ h2, h3 {
   background-color: lightgrey;
   padding: 16px;
   line-height: 1em;
-  border-left: 4px #0084FF solid
+  border-left: 4px #FF0084 solid;
 }
 
 .menu-title {
@@ -217,7 +216,7 @@ h2, h3 {
 
 .menu-list-item {
   display: inline;
-  margin: 0 10px;
+  padding: 15px 10px;
 }
 
 .register {
@@ -328,4 +327,27 @@ h2, h3 {
   animation-name: load;
   animation-duration: 2s;
   animation-iteration-count: infinite;
+}
+
+.submenu + .menu-list-item{
+  background-color: #FF0084;
+  color: white;
+}
+.submenu {
+  position: absolute;
+}
+
+.submenu-list {
+    position: relative;
+    top: 33px;
+}
+
+.submenu-list-item {
+  padding: 10px 20px;
+  background-color: #0084ff;
+  color: white;
+}
+
+.submenu-list-item a{
+  color: white;
 }

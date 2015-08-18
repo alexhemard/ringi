@@ -96,7 +96,7 @@
     
     (om/root app state {:target (app-target)
                         :shared {:conn  db/conn
-                                 :comms (:comms state)}})))
+                                 :comms (:comms @state)}})))
 
 (defn init! []
   (let [state (app-state)]

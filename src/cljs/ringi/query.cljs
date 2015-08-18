@@ -1,17 +1,18 @@
 (ns ringi.query)
 
 (def topics
-  '[:find ?e 
+  '[:find ?e
     :where [?e :topic/title]])
 
 (def topics-by-author
-  '[:find ?e
-    :in $ ?u
-    :where [?e :topic/author ?u]])
+  '[:find [(pull ?e ?selector) ...]
+    :in $ ?u ?selector
+    :where [?e :topic/author ?a]
+           [?a :user/id      ?u]])
 
 (def topic-by-id
-  '[:find ?e
-    :in $ ?id
+  '[:find (pull ?e ?selector) .
+    :in $ ?id ?selector
     :where [?e :topic/id ?id]])
 
 (def vote-by-author
@@ -22,25 +23,30 @@
 
 (def user-p
   [:user/id
-   :user/name
-   :user/avatar])
+   :user/name])
 
 (def vote-p
   [:vote/id
    :vote/value
-   {:vote/author [:user/name]}])
+   {:vote/author user-p}])
 
 (def choice-p
   [:db/id
    :choice/id
    :choice/title
-   {:choice/votes vote-p}])
+   {:votes vote-p}])
+
 
 (def topic-p
-  [:topic/id
+  [:db/id
+   :topic/id
    :topic/title
-   :topic/timestamp
-   :topic/choices 
+   :topic/description
    {:topic/author user-p}
    {:topic/choices choice-p}])
-  
+
+(def topics-p
+  [:db/id
+   :topic/id
+   :topic/title
+   :topic/description])

@@ -63,13 +63,14 @@
                    :fn raw->vote}])
 
 (defmap raw->topic [m]
-  [:topic/id    :id
-   :topic/title :title
-   :topic/choices {:from :choices
-                   :cardinality :many
-                   :fn   raw->choice}
-   :topic/author  {:from :author
-                   :fn   raw->author}])
+  [:topic/id          :id
+   :topic/title       :title
+   :topic/description :description
+   :topic/choices    {:from :choices
+                      :cardinality :many
+                      :fn   raw->choice}
+   :topic/author     {:from :author
+                      :fn   raw->author}])
 
 (def api-root "/v1")
 
@@ -119,10 +120,11 @@
           nav-ch (:nav comms)          
           result (<! (POST topics-path data))
           data (get-in result [:body :data])
-          location (get-in result [:headers "Location"])
-          [_ id] (re-find #"/v1/topics/(\S+)" location)
-          new-topic (str "/t/" id)]
-      (.setToken history new-topic))))
+          location (get-in result [:headers "Location"])]
+      (if location
+        (let [[_ id] (re-find #"/v1/topics/(\S+)" location)
+              new-topic (str "/t/" id)]
+          (.setToken history new-topic))))))
 
 (defmethod handle :create-choice
   [method args state]
@@ -138,13 +140,10 @@
 (defmethod handle :vote
   [method args state]
   (go
-    (let [{:keys [choice-id data]}  args
+    (let [{:keys [choice value]}  args
           {:keys [comms]} @state
           persist-ch (:persist comms)
-          result (<! (POST (votes-path choice-id) data))]
-      
-
-      )))
+          result  (<! (POST (votes-path (:choice/id choice)) (str "value=" value)))])))
 
 (defmethod handle :default
   [method args state])
@@ -153,38 +152,3 @@
   ([ch method] (call ch method {}))
   ([ch method args]
    (put! ch [method args])))
-
-(comment
-  (defn start-service! []
-    (let [topic-chan        (chan 1)
-          topics-chan       (chan 1)
-          create-topic-chan (chan 1)
-          vote-chan         (chan 1)]
-      
-      (go-loop []
-        (let [[topic msg] (<! topics-chan)
-              result (GET "/v1/topics")]
-          (>! persist-chan (map raw->topic (get-in (<! result) [:body :data])))
-          (recur)))
-
-      (go-loop []
-        (let [[topic {:keys [topic-id]}] (<! topic-chan)
-              result (GET (str "/v1/topics/" topic-id))]
-          (>! persist-chan [(raw->topic (get (<! result) :body))])
-          (recur)))
-      
-      (go-loop []
-        (let [[topic msg] (<! create-topic-chan)
-              result      (POST "/v1/topics" msg)]))
-      
-      (go-loop []
-        (let [[topic {:keys [choice-id vote]}] (<! vote-chan)
-              result (POST (str "/v1/choices/" choice-id "/votes") (str "value=" vote))]
-          (when (<! result)
-            (GET "/v1/"))
-          (recur)))
-      
-      (go-loop []
-        (let [tx (<! persist-chan)]
-          (d/transact! conn tx))
-        (recur)))))
