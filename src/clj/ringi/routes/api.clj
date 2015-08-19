@@ -1,14 +1,14 @@
 (ns ringi.routes.api
-  (:require [compojure.handler  :as handler]
-            [compojure.route    :as route]
-            [compojure.core     :refer [GET PUT DELETE POST PATCH routes context let-routes]]
-            [ring.util.response :refer [response created status not-found] :as resp]
+  (:require [compojure.handler    :as handler]
+            [compojure.route      :as route]
+            [compojure.core       :refer [GET PUT DELETE POST PATCH routes context let-routes]]
+            [ring.util.response   :refer [response created status not-found] :as resp]
             [ringi.models.topic   :as topic]
             [ringi.models.choice  :as choice]
             [ringi.models.vote    :as vote]
             [ringi.models.comment :as comment]
-            [ringi.util  :refer [parse-uuid parse-int unauthorized! json-response]]
-            [ringi.auth  :refer [current-user]]))
+            [ringi.util           :refer [parse-uuid parse-int unauthorized! json-response]]
+            [ringi.auth           :refer [current-user]]))
 
 (defn get-topics [ctx user]
   (if user
@@ -41,7 +41,7 @@
   (let [conn (get-in ctx [:datomic :conn])
         topic-id (parse-uuid topic-id)
         partial (topic/raw->update body)
-        {:keys [errors] :as topic} (topic/update conn (:db/id user) topic-id partial)]
+        {:keys [errors] :as topic} (topic/modify conn (:db/id user) topic-id partial)]
     (if-not errors
       (-> (response nil)
           (status 204))
@@ -71,13 +71,13 @@
     (let [conn (get-in ctx [:datomic :conn])
           choice-id (parse-uuid choice-id)
           partial (choice/raw->choice body)
-          {:keys [errors] :as topic} (choice/update conn (:db/id user) choice-id partial)]
+          {:keys [errors] :as topic} (choice/modify conn (:db/id user) choice-id partial)]
       (if-not errors
         (-> (response nil)
             (status 204))
         (-> (response {:errors errors})
             (status 422))))
-    (unauthorized!)))    
+    (unauthorized!)))
 
 (defn get-choice-comments [ctx choice-id]
   (let [conn (get-in ctx [:datomic :conn])
@@ -85,14 +85,14 @@
         comments (map comment/comment->raw (choice/fetch-comments conn choice-id))]
     (-> (response {:total (count comments)
                    :data comments})
-        (status 200)))) 
+        (status 200))))
 
 (defn post-choice-comment [ctx user choice-id body]
   (if user
     (let [conn      (get-in ctx [:datomic :conn])
           body      (comment/raw->comment body)
           choice-id (parse-uuid choice-id)
-          {:keys [errors] :as result} (choice/comment conn (:db/id user) choice-id body)]
+          {:keys [errors] :as result} (choice/create-comment conn (:db/id user) choice-id body)]
       (if-not errors
         (-> (response nil)
             (status 201))
@@ -110,7 +110,7 @@
     (let [conn      (get-in ctx [:datomic :conn])
           choice-id (parse-uuid choice-id)
           {:keys [errors] :as result} (vote/vote conn (:db/id user) [:choice/uid choice-id] value)]
-      (if-not errors 
+      (if-not errors
         (-> (response nil)
             (status 204))
         (-> (response {:errors errors})

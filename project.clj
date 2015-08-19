@@ -38,7 +38,8 @@
              :dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.10"]
                                   [org.clojure/java.classpath "0.2.2"]
-                                  [kerodon "0.6.1"]]}}
+                                  [kerodon "0.6.1"]]}
+             :uberjar {:aot :all}}
 
   :plugins [[lein-cljsbuild "1.0.6"]
             [lein-ring "0.9.6"]

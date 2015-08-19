@@ -3,7 +3,8 @@
             [ringi.datomic              :refer [create-datomic]]
             [ringi.app                  :refer [create-app]]
             [ringi.http                 :refer [create-http-server]]
-            [ringi.config               :as     conf]))
+            [ringi.config               :as     conf])
+  (:gen-class))
 
 (defn system [config]
   (let [datomic-config    (:datomic config)
