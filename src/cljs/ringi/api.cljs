@@ -1,12 +1,13 @@
 (ns ringi.api
-  (:require [cljs.core.async :refer [chan pub sub <! put!] :as async]
-            [datascript  :as d]
-            [goog.events :as events]
+  (:require [cljs.core.async   :refer [chan pub sub <! put!] :as async]
+            [datascript        :as d]
+            [goog.events       :as events]
             [cognitect.transit :as transit]
-            [datascript :as d]
-            [clojure.string :refer [join]]
-            [secretary.core :as secretary]
-            [ringi.mapper :refer [build-mapping*]])
+            [datascript        :as d]
+            [clojure.string    :refer [join]]
+            [secretary.core    :as secretary]
+            [ringi.db          :as db]
+            [ringi.mapper      :refer [build-mapping*]])
   (:import [goog.net XhrIo]
            goog.net.EventType
            [goog.events EventType])
@@ -37,7 +38,7 @@
   (xhr {:method "GET"
         :url url}))
 
-(defn POST 
+(defn POST
   [url data]
   (xhr {:method "POST"
         :url url
@@ -53,11 +54,20 @@
    :vote/author {:from :author
                  :fn   raw->author}])
 
+(defmap raw->comment [m]
+  [:comment/id      :id
+   :comment/content :content
+   :comment/author {:from :author
+                    :fn   raw->author}])
+
 (defmap raw->choice [m]
   [:choice/id     :id
    :choice/title  :title
    :choice/author {:from :author
                    :fn   raw->author}
+   :comments      {:from :comments
+                   :cardinality :many
+                   :fn raw->comment}
    :votes         {:from :votes
                    :cardinality :many
                    :fn raw->vote}])
@@ -84,6 +94,9 @@
 
 (defn choice-path [choice-id]
   (join "/" [api-root "choices" choice-id]))
+
+(defn choice-comment-path [choice-id]
+  (join "/" [api-root "choices" choice-id "comments"]))
 
 (defn votes-path [choice-id]
   (join "/" [(choice-path choice-id) "votes"]))
@@ -117,7 +130,7 @@
     (let [{:keys [data]}  args
           {:keys [history comms]} @state
           persist-ch (:persist comms)
-          nav-ch (:nav comms)          
+          nav-ch (:nav comms)
           result (<! (POST topics-path data))
           data (get-in result [:body :data])
           location (get-in result [:headers "Location"])]
@@ -133,9 +146,22 @@
           {:keys [comms]} @state
           persist-ch (:persist comms)
           result (<! (POST choices-path data))]
-      
+
 
       )))
+
+(defmethod handle :create-choice-comment
+  [method args state]
+  (go
+    (let [{:keys [choice-id data]} args
+          current-user (:current-user @state)
+          persist-ch (get-in @state [:comms :persist])
+          result (<! (POST (choice-comment-path choice-id) data))]
+      (if (= (:status result) 201)
+        (db/persist! persist-ch [{:_comments [:choice/id choice-id]
+                                  :comment/content (:content data)
+                                  :comment/author  {:user/id   (:id current-user)
+                                                    :user/name (:name current-user)}}])))))
 
 (defmethod handle :vote
   [method args state]

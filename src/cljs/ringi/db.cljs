@@ -34,11 +34,11 @@
    :topic/title       {}
    :topic/description {}
    :topic/timestamp   {}
-   :topic/author      {:db/valueType    :db.type/ref
-                       :db/cardinality  :db.cardinality/one}
-   :topic/choices     {:db/valueType    :db.type/ref
-                       :db/cardinality  :db.cardinality/many
-                       :db/isComponent  true}
+   :topic/author      {:db/valueType   :db.type/ref
+                       :db/cardinality :db.cardinality/one}
+   :topic/choices     {:db/valueType   :db.type/ref
+                       :db/cardinality :db.cardinality/many
+                       :db/isComponent true}
 
    ;; items
 
@@ -50,20 +50,21 @@
 
    ;; comments
 
-   :comments          {:db/valueType    :db.type/ref
-                       :db/cardinality  :db.cardinality/many
-                       :db/isComponent  true}
-   :comment/body      {}
-   :comment/author    {:db/valueType :db.type/ref}
+   :comments          {:db/valueType   :db.type/ref
+                       :db/cardinality :db.cardinality/many
+                       :db/isComponent true}
+   :comment/id        {:db/unique      :db.unique/identity}
+   :comment/content   {}
+   :comment/author    {:db/valueType   :db.type/ref}
 
   ;; votes
 
-   :votes             {:db/valueType    :db.type/ref
-                       :db/cardinality  :db.cardinality/many
-                       :db/isComponent  true}
-   :vote/id           {:db/unique :db.unique/identity}
+   :votes             {:db/valueType   :db.type/ref
+                       :db/cardinality :db.cardinality/many
+                       :db/isComponent true}
+   :vote/id           {:db/unique      :db.unique/identity}
    :vote/value        {}
-   :vote/author       {:db/valueType :db.type/ref}})
+   :vote/author       {:db/valueType   :db.type/ref}})
 
 (def conn
   (d/create-conn schema))

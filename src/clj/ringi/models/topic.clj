@@ -32,11 +32,20 @@
    :value  {:from :vote/value
             :fn name}])
 
-(defmap choice->raw [m]
-  [:id     :choice/uid
-   :author {:from :choice/author
+(defmap comment->raw [m]
+  [:id      :comment/uid
+   :author {:from :comment/author
             :fn user->raw}
-   :title  :choice/title    
+   :content :comment/content])
+
+(defmap choice->raw [m]
+  [:id        :choice/uid
+   :author   {:from :choice/author
+              :fn user->raw}
+   :title     :choice/title
+   :comments {:from :comments
+              :fn comment->raw
+              :cardinality :many}
    :votes {:from :votes
            :fn votes->raw
            :cardinality :many}])

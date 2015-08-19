@@ -31,10 +31,17 @@
    :vote/value
    {:vote/author user-p}])
 
+(def comment-p
+  [:db/id
+   :comment/id
+   :comment/content
+   {:comment/author user-p}])
+
 (def choice-p
   [:db/id
    :choice/id
    :choice/title
+   {:comments comment-p}
    {:votes vote-p}])
 
 

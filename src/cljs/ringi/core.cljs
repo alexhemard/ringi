@@ -55,7 +55,7 @@
             (when (secretary/locate-route path)
               (.preventDefault e)
               (.setToken history path)))))))
-  
+
   (secretary/dispatch! (-> js/window .-location .-pathname)))
 
 (defn app-state []
@@ -83,20 +83,21 @@
         api-tap     (chan)
         persist-tap (chan)]
 
-    (async/tap api-mult         api-tap)    
+    (async/tap api-mult         api-tap)
     (async/tap navigation-mult  nav-tap)
-    (async/tap persistence-mult persist-tap)    
+    (async/tap persistence-mult persist-tap)
 
     (go-loop []
       (alt!
-        api-tap     ([[method args]] (handle-api method args state))        
+        api-tap     ([[method args]] (handle-api method args state))
         nav-tap     ([[path params]] (handle-nav path params state))
         persist-tap ([tx]            (handle-persist tx state)))
         (recur))
-    
+
     (om/root app state {:target (app-target)
                         :shared {:conn  db/conn
-                                 :comms (:comms @state)}})))
+                                 :comms (:comms @state)
+                                 :current-user  (:current-user @state)}})))
 
 (defn init! []
   (let [state (app-state)]

@@ -31,7 +31,6 @@
                  [com.cognitect/transit-cljs "0.8.220"]
                  [org.omcljs/om "0.9.0"]
                  [datascript "0.11.6"]
-                 [cljs-http "0.1.35"]
                  [secretary "1.2.1"]]
 
   :repositories {"my.datomic.com" {:url "~/.m2"}}

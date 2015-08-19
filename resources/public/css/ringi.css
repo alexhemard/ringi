@@ -31,7 +31,11 @@ a:active{
   margin: 20px;
 }
 
-button {
+body {
+  background-color: #fbfbfb;
+}
+
+.button {
   background-color: white;
   border: none;
   display: inline;
@@ -45,7 +49,7 @@ ul {
 }
 
 .topics {
-  
+
 }
 
 .topics-list-item {
@@ -84,9 +88,9 @@ ul {
 }
 
 .vote-form {
-  display: inline-block;
-  height: 100%;
+  float: left;
   padding: 20px;
+  margin-top: 7px;
 }
 
 .vote-form div {
@@ -98,6 +102,10 @@ ul {
   margin-left: 0.5em;
 }
 
+.choices {
+  margin-top: 20px;
+}
+
 .choice {
   width: 100%;
   clear: left;
@@ -105,22 +113,64 @@ ul {
 
 .choice-container {
   display: inline-block;
-  position: absolute;
-  margin: 24px 10px;
+  margin: 10px;
+  width: 500px;
+  background-color: #fbfbfb;
+  border: 1px solid #ededed;
+}
+
+.choice-container h3 {
+  margin: 20px;
+}
+
+.choice-container .votes {
+  margin: 20px;
 }
 
 .votes {
   overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.comments {
+  width: 100%;
+  background-color: #f5f5f5;
+  border-top: 1px solid #eaeaea;
+  padding: 10px 10px 5px 10px;
+  box-sizing: border-box;
+}
+
+.comments-list {
+  font-family: sans-serif;
+  font-size: 12px;
+  padding: 0px 10px;
 }
 
 .comment {
   margin: 10px 0;
 }
 
+.comment:first-child {
+  margin-top: 0px;
+
+}
+
 .comment-user {
   font-weight: bold;
   font-size: 12px;
 }
+
+.comments textarea{
+  border: 1px solid lightgrey;
+  display: inline-block;
+  box-sizing: border-box;
+  font-size: 12px;
+  padding: 1em;
+  height: 41px;
+  resize: none;
+  width: 100%;
+}
+
 
 .vote {
   display: inline-block;
@@ -253,7 +303,7 @@ h2, h3 {
 .register-button {
   border: none;
   background-color: lightgrey;
-  font-family: inherit;  
+  font-family: inherit;
   font-size: 14px;
   display: block;
   line-height: 1em;
@@ -297,7 +347,7 @@ h2, h3 {
 .button {
   border: none;
   background-color: lightgrey;
-  font-family: inherit;  
+  font-family: inherit;
   font-size: 14px;
   display: block;
   line-height: 1em;

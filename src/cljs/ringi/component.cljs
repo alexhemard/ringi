@@ -1,5 +1,7 @@
 (ns ringi.component
-  (:require [om.core :as om :include-macros true]
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [cljs.core.async :as async :refer [put! chan sliding-buffer timeout]]
+            [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [datascript   :as d]
             [clojure.string :refer [blank?]]
@@ -55,12 +57,21 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:show-menu false})
+      {:show-menu false
+       :mouseenter (chan (sliding-buffer 1))})
     om/IRenderState
     (render-state [this state]
       (dom/ul #js {:className "menu-list"}
         (if (:show-menu state)
-          (dom/div #js {:className "submenu"}
+          (dom/div #js {:className "submenu"
+                        :onMouseLeave (fn [e]
+                                        (go
+                                          (>! (:mouseenter state) true)
+                                          (<! (:mouseenter state))
+                                          (let [[value chan] (alts! [(timeout 500) (:mouseenter state)])]
+                                            (om/set-state! owner :show-menu (boolean value)))))
+                        :onMouseEnter (fn [e]
+                                        (put! (:mouseenter state) true))}
             (dom/ul #js {:className "submenu-list"}
               (dom/li #js {:className "submenu-list-item"}
                 (dom/a #js {:href "/logout"} "log out")))))
@@ -205,6 +216,80 @@
                 vote  (get votes value)]
             (dom/li #js {:className (str "vote " value)})))))))
 
+(defn- clear-nodes!
+  [& nodes]
+  (doall (map #(set! (.-value %) "") nodes)))
+
+(defn parse-comment [value user]
+  {:comment/author {:user/id user}
+   :text value})
+
+(defn comment-view [comment owner]
+  (reify
+    om/IRenderState
+    (render-state [this {:keys [delete]}]
+      (dom/li
+       #js {:className "comment"}
+       (dom/div #js {:className "comment-user"} (get-in comment [:comment/author :user/name]))
+       (dom/div #js {:className "comment-text"} (:comment/content comment))))))
+
+(defn comment-changed [e owner]
+  (let [value (.. e -target -value)
+        node (om/get-node owner "new-comment")
+        style (.getComputedStyle js/window node nil)
+        offset  (+ (js/parseFloat (.-borderTopWidth style)) (js/parseFloat (.-borderBottomWidth style)))]
+    (om/set-state! owner :value value)
+    (set! (.. node -style -height) (.-fontSize style))
+    (set! (.. node -style -height) (str (+ (.. node -scrollHeight) offset) "px")))
+  nil)
+
+(defn add-comment [e owner choice]
+  (when (and (= (.-keyCode e) 13) (not (.-shiftKey e)))
+    (let [shared  (om/get-shared owner)
+          api-ch  (get-in shared [:comms :api])
+          comment (om/get-node owner "new-comment")
+          value   (.-value comment)]
+      (when-not (clojure.string/blank? value)
+        (om/set-state! owner :value "")
+        (api/call! api-ch :create-choice-comment {:choice-id (:choice/id choice)
+                                                  :data      {:content value}})
+        (.preventDefault e))))
+  nil)
+
+(defn comment-input [choice owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:create (chan)
+       :value ""})
+    om/IRenderState
+    (render-state [this state]
+      (dom/textarea #js {:ref "new-comment"
+                         :placeholder "Add Comment.."
+                         :onChange #(comment-changed % owner)
+                         :value (:value state)
+                         :onKeyUp #(add-comment % owner choice)}))))
+
+(defn comments-view [choice owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:delete (chan)
+       :create (chan)})
+    om/IWillMount
+    (will-mount [_]
+      (let [delete (om/get-state owner :delete)]
+        ; do stuff
+        ))
+    om/IRenderState
+    (render-state [this {:keys [delete]}]
+      (dom/div #js {:className "comments"}
+        (apply dom/ul #js {:className "comments-list"}
+          (for [comment (:comments choice)]
+            (om/build comment-view comment {:init-state {:delete delete}
+                                            :react-key  (:db/id comment)})))
+        (om/build comment-input choice)))))
+
 (defn choice-view [app owner]
   (reify
     om/IRender
@@ -213,7 +298,8 @@
         (om/build vote-form app)
         (dom/div #js {:className "choice-container"}
           (dom/h3 {:className "choice-title"} (:choice/title (:choice app)))
-          (om/build vote-data app))))))
+          (om/build vote-data app)
+          (om/build comments-view (:choice app)))))))
 
 (defn topic-view [{:keys [topic
                           conn
@@ -238,7 +324,7 @@
           (dom/h2 #js {:className "topic-title"} title)
           (dom/div #js {:className "topic-author"} (:user/name author))
           (dom/div #js {:className "topic-description"} description)
-          (apply dom/ul nil
+          (apply dom/ul #js {:className "choices"}
             (for [choice choices]
               (om/build choice-view {:topic  topic
                                      :choice choice
