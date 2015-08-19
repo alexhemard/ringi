@@ -1,15 +1,15 @@
 (ns ringi.http
   (:require [com.stuartsierra.component :as component]
-            [aleph.http :refer [start-server]]))
+            [ring.adapter.jetty :as jetty]))
 
 (defrecord HTTPServer [config app server]
   component/Lifecycle
   (start [component]
-    (let [server (start-server (:handler app) config)]
+    (let [server (jetty/run-jetty (:handler app) config)]
       (assoc component :server server)))
   (stop [component]
     (when server
-      (.close server)
+      (.stop server)
       component)))
 
 (defn create-http-server [config]

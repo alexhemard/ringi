@@ -101,7 +101,7 @@
         (d/entity db-after (d/resolve-tempid db-after tempids eid)))
       {:errors errors})))
 
-(defn update [conn user id partial]
+(defn modify [conn user id partial]
   (let [[errors topic] (validate-update partial)]
     (if-not errors
       (let [topic (assoc topic :db/id [:topic/uid id])

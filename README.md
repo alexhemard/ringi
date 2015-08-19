@@ -1,3 +1,3 @@
 ## ringi
 
-voteit is the new todo
+consensus app

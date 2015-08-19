@@ -42,7 +42,7 @@
         (d/entity db-after (d/resolve-tempid db-after tempids eid)))
       {:errors errors})))
 
-(defn update [conn user id partial]
+(defn modify [conn user id partial]
   (let [[errors topic] (validate-update partial)]
     (if-not errors
       (let [choice (assoc topic :db/id [:choice/uid id])
@@ -53,5 +53,5 @@
 (defn fetch-comments [conn choice-id]
   (comment/fetch-all conn [:choice/uid choice-id]))
 
-(defn comment [conn user choice-id comment]
+(defn create-comment [conn user choice-id comment]
   (comment/create conn user [:choice/uid choice-id] comment))
