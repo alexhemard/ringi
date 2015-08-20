@@ -8,6 +8,7 @@
             [ring.middleware.reload         :refer [wrap-reload]]
             [ring.middleware.session        :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
+            [ring.middleware.gzip           :refer [wrap-gzip]]
             [cheshire.core                  :as     json]
             [hiccup.page                    :refer [html5 include-css include-js]]
             [ringi.routes.api               :refer [api-routes]]
@@ -36,8 +37,8 @@
    (context "/v1" [] (api-routes ctx))
    (auth-routes ctx)
    (route/resources "/")
-   (GET "*/*" [:as {user :user}] (index user)) 
-   (route/not-found "404 Not Found")))  
+   (GET "*/*" [:as {user :user}] (index user))
+   (route/not-found "404 Not Found")))
 
 (defn app
   [ctx]
@@ -47,7 +48,8 @@
       wrap-slingshot
       (wrap-json-body {:keywords? true})
       handler/api
-      wrap-json-response))
+      wrap-json-response
+      wrap-gzip))
 
 (defrecord App [datomic handler]
   component/Lifecycle

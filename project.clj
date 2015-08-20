@@ -19,7 +19,8 @@
                  [com.datomic/datomic-pro "0.9.5201" :exclusions [joda-time]]
                  [ring "1.4.0"]
                  [ring/ring-json "0.4.0"]
-                 [aleph "0.4.0"]
+                 [ring/ring-jetty-adapter "1.4.0"]
+                 [amalloy/ring-gzip-middleware "0.1.3"]
                  [hiccup "1.0.5"]
                  [slingshot "0.12.2"]
                  [bouncer "0.3.3"]
@@ -33,7 +34,10 @@
                  [datascript "0.11.6"]
                  [secretary "1.2.1"]]
 
-  :repositories {"my.datomic.com" {:url "~/.m2"}}
+  :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
+                                   :username :env/datomic_user
+                                   :password :env/datomic_key }}
+
   :profiles {:test {:source-paths ["test"]}
              :dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.10"]
@@ -54,7 +58,7 @@
 
   :main ringi.system
 
-  :figwheel {:nrepl-port 7002}
+  :min-lein-version "2.0.0"
 
   :source-paths ["src/clj"]
 
@@ -71,7 +75,7 @@
              {:id "release"
               :source-paths ["src/cljs"]
               :compiler {:output-dir "resources/public/js"
-                         :output-to "ringi.js"
+                         :output-to "resources/public/js/ringi.js"
                          :asset-path "/"
                          :main ringi.core
                          :optimizations :advanced

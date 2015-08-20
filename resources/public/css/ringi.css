@@ -171,6 +171,9 @@ ul {
   width: 100%;
 }
 
+.comment-text {
+  white-space: pre-wrap;
+}
 
 .vote {
   display: inline-block;
