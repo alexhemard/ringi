@@ -2,7 +2,6 @@
   (:require [cljs.core.async   :refer [chan pub sub <! put!] :as async]
             [datascript        :as d]
             [goog.events       :as events]
-            [cognitect.transit :as transit]
             [datascript        :as d]
             [clojure.string    :refer [join]]
             [secretary.core    :as secretary]
@@ -14,6 +13,16 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]
    [ringi.mapper :refer [defmap]]))
+
+(defn event-source [url]
+  (let [source (new js/EventSource url)
+        event-ch (chan)]
+    (doseq [event-type ["error" "message"]]
+      (.addEventListener source (str "on" event-type)
+        (fn [event]
+          (if-not (= event-type "error")
+            (put! event-ch {:data (.-data event)})
+            (put! event-ch :error)))))))
 
 (defn- format-xhr-response [xhr]
   {:status (.getStatus xhr)

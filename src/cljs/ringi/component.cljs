@@ -1,6 +1,6 @@
 (ns ringi.component
-  (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs.core.async :as async :refer [put! chan sliding-buffer timeout]]
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
+  (:require [cljs.core.async :as async :refer [put! chan sliding-buffer <! timeout]]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [datascript   :as d]
@@ -305,15 +305,8 @@
                           conn
                           params] :as app} owner]
   (reify
-    om/IWillMount
-    (will-mount [this]
-      (let [{:keys [id]} (:params app)]
-        (bind conn app :topic q/topic-by-id [id q/topic-p])))
-    om/IWillUnmount
-    (will-unmount [this]
-      (unbind conn app :topic))
-    om/IRender
-    (render [this]
+    om/IRenderState
+    (render-state [this _]
       (let [user   (:current-user app)
             {:keys [topic/title
                     topic/description

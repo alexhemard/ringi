@@ -5,7 +5,7 @@
 
 (use-fixtures :each default-fixture)
 
-(deftest find
+(deftest fetch
   (let [conn   (get-in *system* [:datomic :conn])
         topicf (get-in fixtures [:topics 0])
         uid    (:topic/uid topicf)

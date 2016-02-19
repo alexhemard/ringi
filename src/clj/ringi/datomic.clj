@@ -6,7 +6,6 @@
 
 (defrecord Datomic [uri conn]
   component/Lifecycle
-
   (start [component]
     (let [db (d/create-database uri)
           conn (d/connect uri)]

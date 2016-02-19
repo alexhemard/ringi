@@ -1,14 +1,12 @@
 (ns ringi.routes.api
-  (:require [compojure.handler    :as handler]
-            [compojure.route      :as route]
+  (:require [compojure.route      :as route]
             [compojure.core       :refer [GET PUT DELETE POST PATCH routes context let-routes]]
             [ring.util.response   :refer [response created status not-found] :as resp]
             [ringi.models.topic   :as topic]
             [ringi.models.choice  :as choice]
             [ringi.models.vote    :as vote]
             [ringi.models.comment :as comment]
-            [ringi.util           :refer [parse-uuid parse-int unauthorized! json-response]]
-            [ringi.auth           :refer [current-user]]))
+            [ringi.util           :refer [parse-uuid parse-int unauthorized! json-response]]))
 
 (defn get-topics [ctx user]
   (if user

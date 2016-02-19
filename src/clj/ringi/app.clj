@@ -12,6 +12,7 @@
             [cheshire.core                  :as     json]
             [hiccup.page                    :refer [html5 include-css include-js]]
             [ringi.routes.api               :refer [api-routes]]
+            [ringi.routes.sse               :refer [sse-routes]]
             [ringi.routes.auth              :refer [auth-routes]]
             [ringi.auth                     :refer [wrap-user]]
             [ringi.util                     :refer [wrap-slingshot]]))
@@ -34,11 +35,14 @@
 
 (defn app-routes [ctx]
   (routes
-   (context "/v1" [] (api-routes ctx))
+    (context "/v1" []
+      (api-routes ctx)
+      (sse-routes ctx))
    (auth-routes ctx)
    (route/resources "/")
    (GET "*/*" [:as {user :user}] (index user))
    (route/not-found "404 Not Found")))
+
 
 (defn app
   [ctx]
@@ -50,6 +54,7 @@
       handler/api
       wrap-json-response
       wrap-gzip))
+
 
 (defrecord App [datomic handler]
   component/Lifecycle
