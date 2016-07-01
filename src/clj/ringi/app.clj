@@ -21,7 +21,7 @@
        (for [key [:user/name :user/uid]
              :let [value (get user key)]]
          [:meta {(str "user_" (name key)) value}]))
-     (include-css (css-asset "ringi.css"))]
+     (include-css (css-asset "app.css"))]
     [:body
      [:div {:id "root"}
       [:div {:class "menu"}

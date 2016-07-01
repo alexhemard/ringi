@@ -12,17 +12,16 @@ var del        = require('del');
 var vinylPaths = require('vinyl-paths');
 
 var paths = {
-  sass:       'src/assets/sass/app.scss'
+  sass:       'src/assets/scss/app.scss',
   css:        'resources/public/css/app.css',
   css_dir:    'resources/public/css',  
-  js:         'resources/public/js/app.js',
+  js:         'resources/public/js/**/*.js',
   fonts:      'resources/public/fonts/*'
 }
 
 var dest = {
   css:       'resources/public/assets/css/app.css',
   css_dir:   'resources/public/assets/css',
-  js:        'resources/public/assets/js/app.js',
   js_dir:    'resources/public/assets/js',
   fonts_dir: 'resources/public/assets/fonts',  
   asset_dir: 'resources/public/assets'
@@ -35,12 +34,15 @@ gulp.task('build', ['clean'], function() {
 gulp.task('assets', ['rework'], function () {
   var busters = require("./resources/public/assets/manifest.json");
 
-  gulp.src([dest.js, dest.css, dest.fonts_dir + "/*"], { base: process.cwd() })
+  gulp.src([dest.js_dir + "/**/*.js", dest.css, dest.fonts_dir + "/*"], { base: process.cwd() })
     .pipe(vinylPaths(del))
     .pipe(rename(function (p) {
       var file = p.dirname + "/" + p.basename + p.extname
-
-      p.basename += "-" + busters[file]
+      var hash = busters[file];
+      
+      if(p.extname && p.extname.indexOf('.') == 0 && hash) {
+        p.basename += "-" + busters[file]
+      }
 
       return p
     }))
@@ -54,8 +56,9 @@ gulp.task('rework', ['buster'], function () {
     .pipe(rework(reworkUrl(function(url) {
       var p    = path.parse(url)
       var hash = busters["resources/public/assets" + url]
-
-      if(p.ext && p.ext.indexOf('.') == 0 && hash) {
+      console.log(p);
+      if(p.extname && p.extname.indexOf('.') == 0 && hash) {
+        console.log(p);
         var url = path.format({
           name: p.name + "-" + hash,
           dir:  path.join("/assets", p.dir),
@@ -71,7 +74,7 @@ gulp.task('rework', ['buster'], function () {
 });
 
 gulp.task('buster', ['css', 'js', 'fonts'], function () {
-  return gulp.src([dest.css, dest.js, dest.fonts_dir + "/*"])
+  return gulp.src([dest.css, dest.js_dir + "/**/*.js", dest.fonts_dir + "/*"])
     .pipe(buster({fileName: 'manifest.json'}))
     .pipe(gulp.dest(dest.asset_dir))
 });

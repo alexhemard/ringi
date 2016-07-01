@@ -4,3 +4,7 @@ target
 .lein-repl-history
 figwheel_server.log
 resources/public/js
+resources/public/css
+node_modules
+.env
+.lein-env
