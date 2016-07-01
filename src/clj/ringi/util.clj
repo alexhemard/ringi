@@ -1,24 +1,8 @@
 (ns ringi.util
-  (:require  [datomic.api :as d]
-             [crypto.password.pbkdf2 :as p]
-             [cheshire.core          :as json]
-             [clojure.string :refer [blank?]]
-             [clojure.walk           :refer [keywordize-keys prewalk]]
+  (:require  [cheshire.core          :as json]
+             [clojure.string         :refer [blank?]]
              [slingshot.slingshot    :refer [try+ throw+]])
-  (:import [java.util UUID]
-           [java.nio ByteBuffer]
-           [org.apache.commons.codec.binary Base64]))
-
-(defn uuid->b64 [^UUID uuid]
-  (let [ba (-> (ByteBuffer/wrap (make-array Byte/TYPE 16))
-               (.putLong (.getMostSignificantBits uuid))
-               (.putLong (.getLeastSignificantBits uuid))
-               (.array))]
-    (String. (Base64/encodeBase64URLSafeString ba))))
-
-(defn b64->uuid [^String b64uuid]
-  (let [bb (ByteBuffer/wrap (Base64/decodeBase64 b64uuid))]
-    (UUID. (.getLong bb) (.getLong bb))))
+  (:import [java.util UUID]))
 
 (defn parse-int
   [s]
@@ -56,11 +40,6 @@
   []
   (java.sql.Timestamp.
    (System/currentTimeMillis)))
-
-(defn jazz-up-json [data]
-  (prewalk
-   (fn [x]
-     (if (uuid? x) (uuid->b64 x) x)) data))
 
 (defn json-response [data & [status]]
   {:status (or status 200)

@@ -1,20 +1,12 @@
 (ns ringi.auth
-  (:require [compojure.core         :refer [routes context GET]]
-            [ring.util.response     :refer [redirect]]
-            [ringi.models.user      :as    user]
-            [clojure.tools.logging  :as    log]
-            [ringi.util             :refer [parse-uuid]]
+  (:require [environ.core           :refer [env]]
             [oauth.client           :as    oauth]))
 
-(defn current-user [req]
-  (:user req))
+(def consumer (oauth/make-consumer (env :twitter-token  "***REMOVED***")
+                                   (env :twitter-secret "***REMOVED***")
+                                   "https://api.twitter.com/oauth/request_token"
+                                   "https://api.twitter.com/oauth/access_token"
+                                   "https://api.twitter.com/oauth/authorize"
+                                   :hmac-sha1))
 
-(defn wrap-user [f ctx]
-  (fn [req]
-    (let [conn (get-in ctx [:datomic :conn])
-          user-id (get-in req [:session :user_id])
-          user-id (parse-uuid user-id)
-          user    (when user-id (user/fetch conn user-id))]
-      (if user
-        (f (assoc req :user user))
-        (f req)))))
+
