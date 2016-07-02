@@ -36,8 +36,7 @@
   :repl-options {:init-ns dev}
   
   :profiles {:dev [:dev-common]
-             :dev-common {:repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
-                                                           :creds :gpg}}
+             :dev-common {:repositories {"my.datomic.com" {:url "~/.m2"}}
                    :source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.11"]
                                   [figwheel-sidecar "0.5.0-SNAPSHOT"]
@@ -70,7 +69,7 @@
               :source-paths ["src/cljs" "src/cljc" "dev"]
               :compiler {:main ringi.core
                          :output-to "resources/public/js/ringi.js"
-                         :source-map "resources/public/js/ringi.js.map"
+                         :source-map true
                          :output-dir "resources/public/js/out"
                          :source-map-path "js/out"
                          :asset-path "/js/out"
@@ -84,4 +83,5 @@
                          :asset-path "/"
                          :main ringi.core
                          :optimizations :advanced
+                         :warnings {:single-segment-namespace false}
                          :pretty-print false}}]})

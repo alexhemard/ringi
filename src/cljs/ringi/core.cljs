@@ -1,14 +1,17 @@
 (ns ringi.core
   (:require [om.next      :as om :refer-macros [defui]]
+            [om.dom       :as dom]
             [goog.dom     :as gdom]
             [ringi.util   :refer [send-remotes]]
             [ringi.parser :as p]
-            [ringi.routes :refer [routers]]
-            [ringi.router :refer [start-router]]))
+            [ringi.routes :refer [routes]]
+            [ringi.router :refer [start-router!]]
+            [dev]))
 
 (defui Ringi
+  Object
   (render [this]
-    (dom/h1 "hello world")))
+    (dom/h1 nil "hello world")))
 
 (def ringi (om/factory Ringi))
 
@@ -22,4 +25,4 @@
      :remotes [:remote]
      :send      send-remotes}))
 
-(om/add-root! reconciler MusicEngine (gdom/getElement "root"))
+(om/add-root! reconciler Ringi (gdom/getElement "root"))
