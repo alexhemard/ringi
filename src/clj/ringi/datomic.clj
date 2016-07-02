@@ -1,6 +1,5 @@
 (ns ringi.datomic
-  (:require [ringi.config :refer [config]]
-            [ringi.schema :as schema]
+  (:require [ringi.schema :as schema]
             [datomic.api :as d]
             [com.stuartsierra.component :as component]))
 

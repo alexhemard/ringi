@@ -1,12 +1,12 @@
-(ns user
+(ns dev
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [clojure.pprint :refer [pprint]]
-            [clojure.repl :refer :all]
-            [clojure.test :as test]
-            [ringi.system]
-            [ringi.config]
-            [com.stuartsierra.component :as component]
+            [clojure.string  :as str]
+            [clojure.pprint  :refer [pprint]]
+            [clojure.repl    :refer :all]
+            [clojure.test    :as test]
+            [ringi.system    :as sys]
+            [ringi.core      :refer [default-config]]   
+            [com.stuartsierra.component   :as component]
             [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
 
 (def system nil)
@@ -15,7 +15,7 @@
   "Constructs the current development system."
   []
   (alter-var-root #'system
-                  (constantly (ringi.system/system (ringi.config/config)))))
+                  (constantly (sys/system default-config))))
 
 (defn start
   "Starts the current development system."
@@ -35,5 +35,5 @@
 
 (defn reset []
   (stop)
-  (refresh :after 'user/go))
+  (refresh :after 'dev/go))
 

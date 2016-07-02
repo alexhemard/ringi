@@ -3,8 +3,10 @@
   :url "http://ringi.co/"
 
   :dependencies [[ring "1.4.0"]
-                 [bidi "1.25.1"]
+                 [amalloy/ring-gzip-middleware "0.1.3"]
+                 [bidi "2.0.9"]
                  [bouncer "1.0.0"]
+                 [cheshire "5.6.3"]
                  [clj-http "2.1.0"]
                  [clj-oauth "1.5.4"]
                  [com.cemerick/friend "0.2.3"]
@@ -22,17 +24,20 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/tools.reader "1.0.0-beta3"]
                  [org.immutant/web "2.1.5" :exclusions [ch.qos.logback/logback-classic]]
-                 [org.omcljs/om "1.0.0-alpha38-SNAPSHOT" :exclusions [com.cognitect/transit-cljs]]
+                 [org.omcljs/om "1.0.0-alpha37" :exclusions [com.cognitect/transit-cljs]]
                  [slingshot "0.12.2"]]
 
   :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
                                    :username :env/datomic_user
                                    :password :env/datomic_key }}
 
-  :source-paths ["src/clj" "src/cljs" "src/cljc"]
+  :source-paths ["src/clj" "src/cljc"]
 
+  :repl-options {:init-ns dev}
+  
   :profiles {:dev [:dev-common]
-             :dev-common {:repositories {"my.datomic.com" {:url "~/.m2"}}
+             :dev-common {:repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
+                                                           :creds :gpg}}
                    :source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.11"]
                                   [figwheel-sidecar "0.5.0-SNAPSHOT"]

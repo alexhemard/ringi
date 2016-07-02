@@ -1,7 +1,8 @@
 (ns ringi.core
   (:require [com.stuartsierra.component :as component]
             [ringi.system :refer [system]]
-            [ringi.config :refer [default-config]])
+            [ringi.util   :refer [parse-int]]            
+            [environ.core :refer [env]])
   (:gen-class))
 
 (def default-config

@@ -1,7 +1,6 @@
 (ns ringi.test.helper
   (:require [clojure.java.io            :as     io]
             [ringi.system               :refer [system]]
-            [ringi.config               :refer [config]]
             [ringi.datomic              :refer [create-datomic]]
             [ringi.app                  :refer [create-app]]
             [datomic.api                :as     d]

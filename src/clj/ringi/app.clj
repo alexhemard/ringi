@@ -3,6 +3,9 @@
             [om.next.server                 :as     om]            
             [bidi.ring                      :refer [make-handler resources-maybe]]
             [hiccup.page                    :refer [html5 include-css include-js]]
+            [ring.util.response             :refer [response status not-found]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.file           :refer [file-request]]
             [ring.middleware.gzip           :refer [wrap-gzip]]
             [ring.middleware.session        :refer [wrap-session]]
             [ring.middleware.session.cookie :refer [cookie-store]]
@@ -11,22 +14,22 @@
                                                     wrap-transit-params
                                                     wrap-transit-response]]
             [ringi.util                     :refer [wrap-slingshot]]
+            [ringi.routes                   :refer [routes]]
             [ringi.assets                   :refer [js-asset css-asset]]))
 
-(defn index [user]
+(def index-page 
   (html5
     [:head {:lang "en"}
      [:title "Ringi"]
-     (when user
-       (for [key [:user/name :user/uid]
-             :let [value (get user key)]]
-         [:meta {(str "user_" (name key)) value}]))
      (include-css (css-asset "app.css"))]
     [:body
      [:div {:id "root"}
       [:div {:class "menu"}
        [:h1 {:class "menu-title loading"} [:a {:href "/"} "Ringi"]]]]
      (include-js (js-asset "ringi.js"))]))
+
+(defn index [req]
+  (response index-page))
 
 (defn transit-response [data & [status]]
   {:status  (or status 200)
@@ -39,6 +42,12 @@
       ((om/parser {:read parser/readf :mutate parser/mutatef})
        ctx (:transit-params req)))))
 
+(extend-protocol bidi.ring/Ring
+  bidi.ring.ResourcesMaybe
+  (request [resource req _]
+    (or (file-request req (get-in resource [:options :prefix]))
+        (not-found "not found"))))
+
 (defn handler-map [ctx]
   {:index         index
    :login         index
@@ -47,23 +56,19 @@
    :topics-index  index
    :topics-show   index
    :topics-create index
-   :resource (resources-maybe {:prefix "resources/public"})
-   :api (partial api ctx)
-   :not-found (fn [req] (not-found "not found"))})
-
-(extend-protocol bidi.ring/Ring
-  bidi.ring.ResourcesMaybe
-  (request [resource req _]
-    (file-request req (get-in resource [:options :prefix]))))
+   :api           (partial api ctx)   
+   :resource      (resources-maybe {:prefix "resources/public"})
+   :not-found     (fn [req] {:status 404 :body "Not found\n"})})
 
 (defn app
   [ctx]
   (-> routes
       (make-handler (handler-map ctx))
+      wrap-transit-response
+      wrap-transit-params
+      wrap-keyword-params
       (wrap-session {:cookie-name "ringi" :store (cookie-store)})
       wrap-slingshot
-      handler/api
-      wrap-json-response
       wrap-gzip))
 
 (defrecord App [datomic handler]

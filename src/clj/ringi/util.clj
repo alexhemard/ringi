@@ -20,9 +20,7 @@
   [uuid]
   (try
     (cond
-     (string? uuid) (try
-                      (UUID/fromString uuid)
-                      (catch Exception e (b64->uuid uuid)))
+     (string? uuid) (UUID/fromString uuid)
      (uuid? uuid) uuid
      :else nil)
     (catch Exception e nil)))
@@ -46,6 +44,11 @@
    :headers {"Content-Type" "application/json"}
    :body (json/generate-string data {:pretty true})})
 
+(defn not-blank? [val]
+  (if val
+    (not (blank? val))
+    true))
+
 (defn unauthorized-response []
   {:status 401})
 
@@ -59,8 +62,3 @@
       (f req)
       (catch [:type ::unauthorized] _
         (unauthorized-response)))))
-
-(defn not-blank? [val]
-  (if val
-    (not (blank? val))
-    true))

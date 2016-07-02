@@ -6,7 +6,7 @@
 
 (defn topics
   ([db]
-   (catalogs db nil))
+   (topics db nil))
   ([db selector]
    (let [q '[:find [(pull ?eid selector) ...]
              :in $ selector
