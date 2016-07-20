@@ -21,7 +21,6 @@
 
 (defmethod send :remote
   [remote query cb]
-  (.log js/console "send" remote query)
   (transit-post "/api" query cb))
 
 (defn send-remotes [remotes cb]

@@ -53,9 +53,9 @@
    :login         index
    :logout        index
    :register      index
-   :topics-index  index
-   :topics-show   index
-   :topics-create index
+   :topics/list   index
+   :topics/create index
+   :topics/show   index
    :api           (partial api ctx)   
    :resource      (resources-maybe {:prefix "resources/public"})
    :not-found     (fn [req] {:status 404 :body "Not found\n"})})
