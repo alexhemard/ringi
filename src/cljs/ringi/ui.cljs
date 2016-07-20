@@ -9,7 +9,7 @@
   
   Object
   (render [this]
-    (dom/h1 nil "Index")))
+    (dom/a #js {:href "/testing"} "Index")))
 
 (defui Login
   static om/IQuery

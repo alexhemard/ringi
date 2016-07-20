@@ -51,14 +51,12 @@
 (defn handler-map [ctx]
   {:index         index
    :login         index
-   :logout        index
    :register      index
    :topics/list   index
    :topics/create index
    :topics/show   index
    :api           (partial api ctx)   
-   :resource      (resources-maybe {:prefix "resources/public"})
-   :not-found     (fn [req] {:status 404 :body "Not found\n"})})
+   :resource      (resources-maybe {:prefix "resources/public"})})
 
 (defn app
   [ctx]

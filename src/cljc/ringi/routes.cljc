@@ -3,11 +3,10 @@
 (def routes
   ["/" [[""         :index]
         ["login"    :login]
-        ["logout"   :logout]
-        ["register" :register]        
-        ["api"     {:post :api}]
+        ["register" :register]
         ["topics" {#"/?" :topics/list
                    ["/"  :topic/id] :topics/show
-                   "/new" :topics/create}]        
-        #?@(:clj [[true :resource]])
-        [true :not-found]]])
+                   "/new" :topics/create}]                
+        #?@(:clj [["logout"  {:delete :logout}]
+                  ["api"     {:post   :api}]
+                  [true :resource]])]])
