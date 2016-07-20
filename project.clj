@@ -24,7 +24,7 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/tools.reader "1.0.0-beta3"]
                  [org.immutant/web "2.1.5" :exclusions [ch.qos.logback/logback-classic]]
-                 [org.omcljs/om "1.0.0-alpha37" :exclusions [com.cognitect/transit-cljs]]
+                 [org.omcljs/om "1.0.0-alpha40" :exclusions [com.cognitect/transit-cljs]]
                  [slingshot "0.12.2"]]
 
   :repositories {"my.datomic.com" {:url "https://my.datomic.com/repo"
