@@ -3,7 +3,7 @@
             [om.dom       :as dom]
             [goog.dom     :as gdom]
             [ringi.util   :refer [send-remotes]]
-            [ringi.ui     :as ui]            
+            [ringi.ui     :as ui]
             [ringi.parser :as p]
             [ringi.routes :refer [routes]]
             [ringi.router :refer [start-router!]]
@@ -29,11 +29,11 @@
   static om/IQueryParams
   (params [this]
     {:page-query [] :page-params {}})
-  
+
   static om/IQuery
   (query [this]
     '[:handler ({:current-page ?page-query} ?page-params)])
-  
+
   Object
   (componentWillMount [this]
     (start-router! routes
@@ -42,12 +42,11 @@
                         (om/set-query! this {:params {:page-query query :page-params params}})
                         (om/transact! this `[(app/navigate ~location)
                                              :current-page])))}))
-  
+
   (render [this]
-    (let [{:keys [handler current-page] :as props} (om/props this)]    
-    (dom/div nil 
-      (let [view (handler->factory handler ui/not-found)]
-        (view current-page))))))
+    (let [{:keys [handler current-page] :as props} (om/props this)
+          view (handler->factory handler ui/not-found)]
+      (ui/wrapper nil (view current-page)))))
 
 (def ringi (om/factory Ringi))
 

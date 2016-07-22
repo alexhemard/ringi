@@ -12,9 +12,10 @@ var del        = require('del');
 var vinylPaths = require('vinyl-paths');
 
 var paths = {
+  sass_libs: ['node_modules/normalize.css'],
   sass:       'src/assets/scss/app.scss',
   css:        'resources/public/css/app.css',
-  css_dir:    'resources/public/css',  
+  css_dir:    'resources/public/css',
   js:         'resources/public/js/**/*.js',
   fonts:      'resources/public/fonts/*'
 }
@@ -23,7 +24,7 @@ var dest = {
   css:       'resources/public/assets/css/app.css',
   css_dir:   'resources/public/assets/css',
   js_dir:    'resources/public/assets/js',
-  fonts_dir: 'resources/public/assets/fonts',  
+  fonts_dir: 'resources/public/assets/fonts',
   asset_dir: 'resources/public/assets'
 }
 
@@ -39,7 +40,7 @@ gulp.task('assets', ['rework'], function () {
     .pipe(rename(function (p) {
       var file = p.dirname + "/" + p.basename + p.extname
       var hash = busters[file];
-      
+
       if(p.extname && p.extname.indexOf('.') == 0 && hash) {
         p.basename += "-" + busters[file]
       }
@@ -51,7 +52,7 @@ gulp.task('assets', ['rework'], function () {
 
 gulp.task('rework', ['buster'], function () {
   var busters = require("./resources/public/assets/manifest.json");
-  
+
   return gulp.src(dest.css)
     .pipe(rework(reworkUrl(function(url) {
       var p    = path.parse(url)
@@ -97,7 +98,7 @@ gulp.task('fonts', function () {
 gulp.task('sass', function () {
   return gulp.src(paths.sass)
     .pipe(sourcemaps.init())
-    .pipe(sass().on('error', sass.logError))
+    .pipe(sass({includePaths: paths.sass_libs}).on('error', sass.logError))
     .pipe(cleanCSS())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.css_dir))
@@ -109,7 +110,7 @@ gulp.task('clean', function() {
 });
 
 gulp.task('watch', ['clean'], function() {
-  gulp.watch("src/assets/sass/**/*", ['sass']);
+  gulp.watch("src/assets/scss/**/*", ['sass']);
 });
 
 gulp.task('default', ['watch', 'sass']);

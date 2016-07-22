@@ -64,6 +64,8 @@
 
   :min-lein-version "2.0.0"
 
+  :figwheel {:css-dirs ["resources/public/css"]}
+
   :cljsbuild {
     :builds [{:id "dev"
               :source-paths ["src/cljs" "src/cljc" "dev"]

@@ -2,20 +2,33 @@
   (:require [om.next :as om :refer-macros [defui]]
             [om.dom  :as dom]))
 
+(defn wrapper [props & children]
+  (let [{:keys [id width height color] :or {id "wrapper"}} props]
+    (dom/div #js {:className (str id)}
+      (dom/header nil
+        (dom/nav nil
+          (dom/ul nil
+            (dom/li nil (dom/a #js {:href "/"} "home"))
+            (dom/li nil (dom/a #js {:href "/topics"} "topics"))
+            (dom/li nil (dom/a #js {:href "/login"} "login"))
+            (dom/li nil (dom/a #js {:href "/register"} "register")))))
+      (dom/main nil
+        children))))
+
 (defui Index
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
-    (dom/a #js {:href "/testing"} "Index")))
+    (dom/h1 nil "Index")))
 
 (defui Login
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
     (dom/h1 nil "Login")))
@@ -24,7 +37,7 @@
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
     (dom/h1 nil "Register")))
@@ -33,7 +46,7 @@
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
     (dom/h1 nil "Topics")))
@@ -42,7 +55,7 @@
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
     (dom/h1 nil "Topic")))
@@ -51,7 +64,7 @@
   static om/IQuery
   (query [this]
     [:handler])
-  
+
   Object
   (render [this]
     (dom/h1 nil "New Topic")))
