@@ -5,14 +5,16 @@
             [datomic.api            :as d]
             [ringi.util             :refer [parse-uuid json-response unauthorized-response]]
             [crypto.password.pbkdf2 :refer [check]]
-            [oauth.client           :as    oauth]))
+            [oauth.client           :as    oauth]
+            [environ.core           :as    env]))
 
-(def consumer (oauth/make-consumer "***REMOVED***"
-                                   "***REMOVED***"
-                                   "https://api.twitter.com/oauth/request_token"
-                                   "https://api.twitter.com/oauth/access_token"
-                                   "https://api.twitter.com/oauth/authorize"
-                                   :hmac-sha1))
+(def consumer (oauth/make-consumer
+                (env :twitter_token)
+                (env :twitter_secret)
+                "https://api.twitter.com/oauth/request_token"
+                "https://api.twitter.com/oauth/access_token"
+                "https://api.twitter.com/oauth/authorize"
+                :hmac-sha1))
 
 (defn login [ctx params session]
   (let [conn                        (get-in ctx [:datomic :conn])

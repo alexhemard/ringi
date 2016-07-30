@@ -24,6 +24,7 @@
                  [hiccup "1.0.5"]
                  [slingshot "0.12.2"]
                  [bouncer "0.3.3"]
+                 [environ "1.0.3"]
 
                  ;; CLJS
 
