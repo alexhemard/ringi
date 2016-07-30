@@ -10,8 +10,11 @@ nav {
   }
 
   ul li {
+    margin: 0 5px;
+
     &:first-child {
-      flex: 10 0 0;
+      flex: 8 0 0;
+      margin: 0;
     }
     
     flex: 1 0 0;

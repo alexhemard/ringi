@@ -13,7 +13,7 @@
   {:index       ui/Index
    :login       ui/Login
    :register    ui/Register
-   :topics/list ui/Topics
+   :topics/list ui/ListTopics
    :topics/show ui/ShowTopic
    :topics/create ui/CreateTopic})
 

@@ -36,6 +36,11 @@
       (if (get st k)
         {:value (om/db->tree query (get st k) st)}))))
 
+(defmethod read :topics/list
+  [{:keys [state query]} k params]
+  ; todo
+  {:value []})
+
 (defmulti mutate om/dispatch)
 
 (defmethod mutate :default

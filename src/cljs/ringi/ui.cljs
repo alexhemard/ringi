@@ -15,6 +15,46 @@
       (dom/main nil
         children))))
 
+(defui Vote
+  static om/Ident
+  (ident [this props]
+    [:votes/by-id (:id props)])
+
+  static om/IQuery
+  (query [this]
+    [:id :author :value])
+
+  Object
+  (render [this]
+    (dom/div nil "vote")))
+
+(defui Choice
+  static om/Ident
+  (ident [this props]
+    [:choices/by-id (:id props)])
+
+  static om/IQuery
+  (query [this]
+    [:title {:votes (om/get-query Vote)}])
+  Object
+  (render [this]
+    (dom/div nil "hey")))
+
+(defui Topic
+  static om/Ident
+  (ident [this props]
+    [:topics/by-id (:id props)])
+
+  static om/IQuery
+  (query [this]
+    [:title :description {:choices (om/get-query Choice)}])
+
+  Object
+  (render [this]
+    (dom/div nil "hey")))
+
+; pages
+
 (defui Index
   static om/IQuery
   (query [this]
@@ -42,14 +82,18 @@
   (render [this]
     (dom/h1 nil "Register")))
 
-(defui Topics
+(defui ListTopics
   static om/IQuery
   (query [this]
-    [:handler])
+    [:handler {:topics/list (om/get-query Topic)}])
 
   Object
   (render [this]
-    (dom/h1 nil "Topics")))
+    (let [{:keys [topics/list]} (om/props this)]
+      (.log js/console list)
+      (dom/div nil
+        (dom/h1 nil "Topics")
+        (dom/div nil list)))))
 
 (defui ShowTopic
   static om/IQuery
